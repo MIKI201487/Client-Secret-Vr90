@@ -595,6 +595,390 @@ javascript:(function () {
   
   })();
 
+// This script creates a custom two-step "Key System" UI on the current web page.
+// It uses custom UI elements instead of built-in browser prompts to ensure it
+// loads and runs reliably without being blocked.
+// To use, copy and paste this entire code into your browser's developer console.
+
+// --- Main script logic ---
+(function() {
+    // Prevent the script from running if the UI already exists
+    if (document.getElementById('key-system-container')) {
+        console.warn('The Key System UI is already active.');
+        return;
+    }
+
+    // Save the original page title to restore it later
+    const originalTitle = document.title;
+    document.title = 'Enforced Protection Key System: Activated';
+
+    // The correct admin password
+    const CORRECT_PASSWORD = 'Admin';
+
+    // Function to remove all created elements and restore the page
+    function removeUI() {
+        const uiContainer = document.getElementById('key-system-container');
+        if (uiContainer) {
+            uiContainer.remove();
+        }
+        // Restore the original title
+        document.title = originalTitle;
+    }
+
+    // --- Create the custom password UI ---
+    function createPasswordUI() {
+        const passwordContainer = document.createElement('div');
+        passwordContainer.id = 'key-system-container';
+        passwordContainer.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #a770ef, #cf6eab);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+
+        const passwordBox = document.createElement('div');
+        passwordBox.style.cssText = `
+            background-color: white;
+            border: 2px solid black;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 350px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        `;
+
+        const passwordTitle = document.createElement('h1');
+        passwordTitle.textContent = 'Enter Admin Password';
+        passwordTitle.style.cssText = `
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        `;
+
+        const passwordInput = document.createElement('input');
+        passwordInput.type = 'password';
+        passwordInput.placeholder = 'Password...';
+        passwordInput.style.cssText = `
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 15px;
+        `;
+
+        const submitButton = document.createElement('button');
+        submitButton.textContent = 'Submit';
+        submitButton.style.cssText = `
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 1px solid black;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        `;
+
+        const messageDisplay = document.createElement('p');
+        messageDisplay.style.cssText = `
+            font-size: 14px;
+            color: red;
+            height: 20px;
+            margin-top: 15px;
+            font-weight: bold;
+        `;
+
+        submitButton.addEventListener('click', () => {
+            if (passwordInput.value === CORRECT_PASSWORD) {
+                // Correct password, remove this UI and create the next one
+                passwordContainer.remove();
+                createKeySystemUI();
+            } else {
+                messageDisplay.textContent = 'Incorrect password.';
+            }
+        });
+
+        passwordBox.appendChild(passwordTitle);
+        passwordBox.appendChild(passwordInput);
+        passwordBox.appendChild(submitButton);
+        passwordBox.appendChild(messageDisplay);
+        passwordContainer.appendChild(passwordBox);
+        document.body.appendChild(passwordContainer);
+        passwordInput.focus();
+    }
+
+    // --- Create the main key system UI ---
+    function createKeySystemUI() {
+        // Generate a unique, one-time key for this session
+        const CORRECT_KEY = `FREE_${crypto.randomUUID().replace(/-/g, '')}`;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'key-system-container';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #a770ef, #cf6eab);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+
+        const uiBox = document.createElement('div');
+        uiBox.id = 'key-system-box';
+        uiBox.style.cssText = `
+            background-color: white;
+            border: 2px solid black;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 350px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        `;
+
+        const uiTitle = document.createElement('h1');
+        uiTitle.id = 'key-system-title';
+        uiTitle.textContent = 'Key System';
+        uiTitle.style.cssText = `
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        `;
+
+        const uiDescription = document.createElement('p');
+        uiDescription.textContent = 'Receive Code From Admin';
+        uiDescription.style.cssText = `
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+        `;
+        
+        const keyMessageContainer = document.createElement('div');
+        keyMessageContainer.style.cssText = `
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        `;
+
+        const keyMessage = document.createElement('p');
+        keyMessage.id = 'key-message';
+        keyMessage.textContent = CORRECT_KEY;
+        keyMessage.style.cssText = `
+            font-size: 14px;
+            color: #000;
+            word-break: break-all;
+            background-color: #f0f0f0;
+            padding: 5px;
+            border-radius: 5px;
+            margin: 0;
+        `;
+        
+        const copyButton = document.createElement('button');
+        copyButton.textContent = 'Copy';
+        copyButton.style.cssText = `
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid black;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        `;
+
+        copyButton.addEventListener('click', () => {
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = CORRECT_KEY;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            copyButton.textContent = 'Copied!';
+            setTimeout(() => {
+                copyButton.textContent = 'Copy';
+            }, 1000);
+        });
+        
+        keyMessageContainer.appendChild(keyMessage);
+        keyMessageContainer.appendChild(copyButton);
+
+        const inputField = document.createElement('input');
+        inputField.id = 'key-system-input';
+        inputField.type = 'text';
+        inputField.placeholder = 'Enter key...';
+        inputField.style.cssText = `
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        `;
+
+        const messageDisplay = document.createElement('p');
+        messageDisplay.id = 'key-system-message';
+        messageDisplay.style.cssText = `
+            font-size: 16px;
+            color: red;
+            height: 20px;
+            margin-top: 15px;
+            font-weight: bold;
+        `;
+
+        inputField.addEventListener('keyup', (e) => {
+            const enteredKey = e.target.value.trim();
+
+            if (enteredKey === CORRECT_KEY) {
+                // Correct key entered: show new message and move to next UI
+                uiBox.innerHTML = '';
+                const gearIcon = document.createElement('span');
+                gearIcon.innerHTML = '⚙️';
+                gearIcon.style.cssText = `
+                    display: inline-block;
+                    animation: spin 1s linear infinite;
+                    margin-right: 10px;
+                `;
+                messageDisplay.textContent = 'Manual Verification Required';
+                messageDisplay.style.color = 'green';
+                messageDisplay.prepend(gearIcon);
+                
+                // Add the spin animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+
+                setTimeout(() => {
+                    // This is where the second UI is created
+                    createVerificationUI(overlay);
+                }, 1500);
+            } else if (enteredKey !== '') {
+                messageDisplay.textContent = 'Incorrect!';
+                messageDisplay.style.color = 'red';
+            } else {
+                messageDisplay.textContent = '';
+            }
+        });
+
+        uiBox.appendChild(uiTitle);
+        uiBox.appendChild(uiDescription);
+        uiBox.appendChild(keyMessageContainer);
+        uiBox.appendChild(inputField);
+        uiBox.appendChild(messageDisplay);
+        overlay.appendChild(uiBox);
+        document.body.appendChild(overlay);
+
+        inputField.focus();
+    }
+    
+    // --- Create the second verification UI ---
+    function createVerificationUI(parentOverlay) {
+        // Clear the previous UI box content
+        parentOverlay.innerHTML = '';
+
+        const verificationBox = document.createElement('div');
+        verificationBox.id = 'verification-box';
+        verificationBox.style.cssText = `
+            background-color: white;
+            border: 2px solid black;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 350px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        `;
+
+        const verificationTitle = document.createElement('h1');
+        verificationTitle.textContent = 'Human Verification, Allowance Key System';
+        verificationTitle.style.cssText = `
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        `;
+
+        const verificationDescription = document.createElement('p');
+        verificationDescription.textContent = 'Enter Allowance Key System code:';
+        verificationDescription.style.cssText = `
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+        `;
+        
+        const verificationInput = document.createElement('input');
+        verificationInput.id = 'verification-input';
+        verificationInput.type = 'text';
+        verificationInput.placeholder = 'Enter allowance key...';
+        verificationInput.style.cssText = `
+            width: 90%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        `;
+        
+        const verificationMessage = document.createElement('p');
+        verificationMessage.id = 'verification-message';
+        verificationMessage.style.cssText = `
+            font-size: 16px;
+            color: red;
+            height: 20px;
+            margin-top: 15px;
+            font-weight: bold;
+        `;
+
+        // The key for this second step
+        const ALLOWANCE_KEY = 'kylestomatoshop';
+
+        verificationInput.addEventListener('keyup', (e) => {
+            const enteredKey = e.target.value.trim();
+
+            if (enteredKey === ALLOWANCE_KEY) {
+                verificationMessage.textContent = 'Verified!';
+                verificationMessage.style.color = 'green';
+                setTimeout(() => {
+                    removeUI(); // Remove everything and restore the page
+                }, 500);
+            } else if (enteredKey !== '') {
+                verificationMessage.textContent = 'Incorrect!';
+                verificationMessage.style.color = 'red';
+            } else {
+                verificationMessage.textContent = '';
+            }
+        });
+
+        verificationBox.appendChild(verificationTitle);
+        verificationBox.appendChild(verificationDescription);
+        verificationBox.appendChild(verificationInput);
+        verificationBox.appendChild(verificationMessage);
+        parentOverlay.appendChild(verificationBox);
+        verificationInput.focus();
+    }
+
+    // Start the process by creating the password UI
+    createPasswordUI();
+
+})();
+
+
 javascript:(()=>{
     // --- Global Configuration & Utilities (for both GUIs) ---
     const globalConfig = {
@@ -5235,7 +5619,7 @@ javascript:(()=>{
                 [s, i, l] = a.match(/LastUpdated: (.+?); ErrorMessage: "((.|\n)+?)"/)
             } catch (e) {} ((He = parseInt(i)) <= qe || c.contentWindow.confirm(l)) && d()
         }, p.onerror = p.onabort = () => {
-            p.onerror = p.onabort = null, d(), document.querySelector("iframe").contentWindow.alert("It seems the GitHub is either blocked or down.\n\nIf it's NOT blocked, join the Discord server for updates\nhttps://discord.gg/jHjGrrdXP6\n(The cheat will still run after this alert)")
+            p.onerror = p.onabort = null, d(), document.querySelector("iframe").contentWindow.alert("Servers have broken down, Please patiently wait till MIKI201487 can resolve this issue)")
         }
     })();
 
