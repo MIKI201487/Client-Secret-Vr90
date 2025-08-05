@@ -595,6 +595,241 @@ javascript:(function () {
   
   })();
 
+// Security Protection Screen JavaScript Code
+
+function createSecurityScreen() {
+    // Create CSS styles
+    const styles = `
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            .security-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-color: #000;
+                color: white;
+                font-family: 'Courier New', monospace;
+                z-index: 999999;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .security-header {
+                position: absolute;
+                top: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 36px;
+                font-weight: bold;
+                letter-spacing: 2px;
+                color: #ff4444;
+                text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            }
+
+            .gear-icon {
+                display: inline-block;
+                animation: rotateGear 2s linear infinite;
+            }
+
+            .lock-container {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .lock {
+                width: 100px;
+                height: 120px;
+                position: relative;
+                animation: lockPulse 2s infinite ease-in-out;
+            }
+
+            .lock-body {
+                width: 100px;
+                height: 70px;
+                background: linear-gradient(145deg, #333, #111);
+                border-radius: 10px;
+                position: absolute;
+                bottom: 0;
+                border: 3px solid #666;
+                box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+            }
+
+            .lock-shackle {
+                width: 60px;
+                height: 60px;
+                border: 8px solid #666;
+                border-radius: 50px 50px 0 0;
+                position: absolute;
+                top: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                border-bottom: none;
+                background: transparent;
+                animation: shackleShake 3s infinite ease-in-out;
+            }
+
+            .keyhole {
+                width: 12px;
+                height: 12px;
+                background: #000;
+                border-radius: 50%;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            .keyhole::after {
+                content: '';
+                width: 4px;
+                height: 15px;
+                background: #000;
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .security-text {
+                color: #ff4444;
+                font-size: 18px;
+                margin-top: 30px;
+                text-align: center;
+                text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+            }
+
+            .warning-lights {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                animation: warningFlash 1.5s infinite ease-in-out;
+            }
+
+            @keyframes rotateGear {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            @keyframes lockPulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+
+            @keyframes shackleShake {
+                0%, 100% { transform: translateX(-50%) rotate(0deg); }
+                10% { transform: translateX(-50%) rotate(-2deg); }
+                20% { transform: translateX(-50%) rotate(2deg); }
+                30% { transform: translateX(-50%) rotate(-1deg); }
+                40% { transform: translateX(-50%) rotate(1deg); }
+                50% { transform: translateX(-50%) rotate(0deg); }
+            }
+
+            @keyframes warningFlash {
+                0%, 100% { 
+                    box-shadow: inset 0 0 50px rgba(255, 68, 68, 0.1);
+                }
+                50% { 
+                    box-shadow: inset 0 0 50px rgba(255, 68, 68, 0.3);
+                }
+            }
+
+            @keyframes fadeOut {
+                0% { 
+                    opacity: 1; 
+                    visibility: visible;
+                }
+                100% { 
+                    opacity: 0; 
+                    visibility: hidden;
+                }
+            }
+
+            .fade-out {
+                animation: fadeOut 1s ease-out forwards;
+            }
+        </style>
+    `;
+
+    // Add styles to head
+    document.head.insertAdjacentHTML('beforeend', styles);
+
+    // Create the security overlay HTML
+    const securityHTML = `
+        <div class="security-overlay" id="securityOverlay">
+            <div class="warning-lights"></div>
+            
+            <div class="security-header">
+                <span class="gear-icon">⚙️</span> Security Protection Enforced
+            </div>
+
+            <div class="lock-container">
+                <div class="lock">
+                    <div class="lock-shackle"></div>
+                    <div class="lock-body">
+                        <div class="keyhole"></div>
+                    </div>
+                </div>
+                <div class="security-text">
+                    SYSTEM LOCKED<br>
+                    ACCESS DENIED
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add the overlay to the body
+    document.body.insertAdjacentHTML('beforeend', securityHTML);
+
+    const overlay = document.getElementById('securityOverlay');
+
+    // Prevent interactions
+    const preventRightClick = (e) => e.preventDefault();
+    const preventKeyShortcuts = (e) => {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+            (e.ctrlKey && e.shiftKey && e.key === 'C') ||
+            (e.ctrlKey && e.key === 'u')) {
+            e.preventDefault();
+        }
+    };
+
+    document.addEventListener('contextmenu', preventRightClick);
+    document.addEventListener('keydown', preventKeyShortcuts);
+
+    // Auto-remove after 7 seconds
+    setTimeout(() => {
+        overlay.classList.add('fade-out');
+        
+        // Completely remove after fade animation
+        setTimeout(() => {
+            overlay.remove();
+            // Remove event listeners
+            document.removeEventListener('contextmenu', preventRightClick);
+            document.removeEventListener('keydown', preventKeyShortcuts);
+        }, 1000);
+    }, 7000);
+}
+
+// Call the function to activate security screen
+createSecurityScreen();
+
 // This script creates a custom two-step "Key System" UI on the current web page.
 // It uses custom UI elements instead of built-in browser prompts to ensure it
 // loads and runs reliably without being blocked.
