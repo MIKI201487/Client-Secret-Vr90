@@ -711,7 +711,27 @@ function createSecurityScreen() {
                 text-align: center;
                 text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
             }
-
+            
+            .proceed-button {
+                background: #ff4444;
+                color: white;
+                border: 2px solid #ff4444;
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                border-radius: 5px;
+                position: absolute;
+                bottom: 30px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1000000;
+                transition: background-color 0.3s ease;
+            }
+            
+            .proceed-button:hover {
+                background-color: #e03b3b;
+            }
+            
             .warning-lights {
                 position: absolute;
                 top: 0;
@@ -791,6 +811,8 @@ function createSecurityScreen() {
                     ACCESS DENIED
                 </div>
             </div>
+
+            <button id="proceedButton" class="proceed-button">Proceed</button>
         </div>
     `;
 
@@ -798,6 +820,20 @@ function createSecurityScreen() {
     document.body.insertAdjacentHTML('beforeend', securityHTML);
 
     const overlay = document.getElementById('securityOverlay');
+    const proceedButton = document.getElementById('proceedButton');
+
+    // Remove the screen when the button is clicked
+    proceedButton.addEventListener('click', () => {
+        overlay.classList.add('fade-out');
+        
+        // Completely remove after fade animation
+        setTimeout(() => {
+            overlay.remove();
+            // Remove event listeners
+            document.removeEventListener('contextmenu', preventRightClick);
+            document.removeEventListener('keydown', preventKeyShortcuts);
+        }, 1000);
+    });
 
     // Prevent interactions
     const preventRightClick = (e) => e.preventDefault();
@@ -812,19 +848,6 @@ function createSecurityScreen() {
 
     document.addEventListener('contextmenu', preventRightClick);
     document.addEventListener('keydown', preventKeyShortcuts);
-
-    // Auto-remove after 7 seconds
-    setTimeout(() => {
-        overlay.classList.add('fade-out');
-        
-        // Completely remove after fade animation
-        setTimeout(() => {
-            overlay.remove();
-            // Remove event listeners
-            document.removeEventListener('contextmenu', preventRightClick);
-            document.removeEventListener('keydown', preventKeyShortcuts);
-        }, 1000);
-    }, 7000);
 }
 
 // Call the function to activate security screen
@@ -1603,14 +1626,43 @@ javascript:(()=>{
         console.log("Side GUI loaded.");
     })();
 
-    // --- Bottom Toolbar (bottom-toolbar-project) Logic ---
-    (function() { // Encapsulate bottom toolbar logic in an IIFE
+    (function() {
+        'use strict';
+    
+        // Remove any existing UI to prevent duplicates
+        if (document.getElementById('terminal-ui')) {
+            document.getElementById('terminal-ui').remove();
+        }
+        if (document.getElementById('toggle-terminal-btn')) {
+            document.getElementById('toggle-terminal-btn').remove();
+        }
+        if (document.getElementById('terminal-styles')) {
+            document.getElementById('terminal-styles').remove();
+        }
+        // Remove bottom toolbar elements
+        const existingBottomToolbar = document.querySelector('.main-bottom-action-toolbar');
+        const existingBottomButton = document.querySelector('.bottom-edit-toggle-button');
+        const existingBottomMessages = document.querySelectorAll('.bottom-message-ui');
+        if (existingBottomToolbar) existingBottomToolbar.remove();
+        if (existingBottomButton) existingBottomButton.remove();
+        existingBottomMessages.forEach(msg => msg.remove());
+    
+        const config = {
+            terminalBg: 'linear-gradient(to bottom, #111111, #330066)',
+            terminalText: '#00ff00',
+            promptColor: '#ff9900',
+            successColor: '#00cc00',
+            errorColor: '#ff3333',
+            buttonBg: '#2b2b2b',
+            buttonHoverBg: '#3c3c3c',
+            processingColor: '#8a2be2',
+            terminalWidth: '500px'
+        };
+    
         const bottomConfig = {
             toolbarHeight: '80px',
             buttonSize: '60px',
             iconSize: '2em',
-            editButtonPadding: '15px 25px',
-            editButtonFontSize: '1.5em',
             colors: {
                 mainBackground: 'linear-gradient(to bottom right, #000000, #330066)',
                 buttonBackground: 'rgba(138, 43, 226, 0.6)',
@@ -1628,41 +1680,100 @@ javascript:(()=>{
             },
             messageUITimeout: 3000
         };
-
-        // Inject bottom toolbar specific styles
-        const bottomStyle = document.createElement('style');
-        bottomStyle.innerHTML = `
+    
+        // --- Inject Combined CSS Styles ---
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'terminal-styles';
+        styleSheet.innerHTML = `
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap');
             @import url('https://fonts.googleapis.com/css?family=Nunito');
-
-            /* Edit Button */
-            .bottom-edit-toggle-button {
+            @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+    
+            body {
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f0f2f5;
+            }
+    
+            /* --- Combined Toggle Button --- */
+            #unified-toggle-btn {
                 position: fixed;
-                top: 15px;
-                right: 15px;
-                padding: ${bottomConfig.editButtonPadding};
-                background: ${bottomConfig.colors.buttonBackground};
-                color: ${bottomConfig.colors.textColor};
-                border: 1px solid ${bottomConfig.colors.buttonHover};
-                border-radius: 8px;
-                font-family: ${bottomConfig.fonts.body};
-                font-size: ${bottomConfig.editButtonFontSize};
-                font-weight: bold;
+                top: 50%;
+                right: 0;
+                transform: translateY(-50%);
+                width: 50px;
+                height: 60px;
+                background: linear-gradient(135deg, ${config.buttonBg} 0%, #404040 100%);
+                color: white;
+                border: 2px solid #555;
+                border-radius: 15px 0 0 15px;
                 cursor: pointer;
+                font-size: 18px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                box-shadow: -2px 0 15px rgba(0, 0, 0, 0.3);
+                transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
                 z-index: 10000;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                transition: background 0.2s ease, box-shadow 0.2s ease;
+                backdrop-filter: blur(5px);
             }
-            .bottom-edit-toggle-button:hover {
-                background: ${bottomConfig.colors.buttonHover};
-                box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    
+            #unified-toggle-btn:hover {
+                background: linear-gradient(135deg, ${config.buttonHoverBg} 0%, #505050 100%);
+                transform: translateY(-50%) translateX(-5px) scale(1.05);
+                box-shadow: -5px 0 20px rgba(0, 0, 0, 0.4);
+                border-color: #777;
             }
-
-            /* Bottom Toolbar */
+    
+            #unified-toggle-btn:active {
+                transform: translateY(-50%) translateX(-2px) scale(0.98);
+            }
+    
+            .unified-arrow-icon {
+                transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                font-size: 20px;
+                text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+                display: inline-block;
+            }
+            
+            .unified-interfaces.is-visible ~ #unified-toggle-btn .unified-arrow-icon {
+                color: ${config.successColor};
+            }
+    
+            /* --- Terminal UI Container --- */
+            .terminal-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: ${config.terminalWidth};
+                height: 100%;
+                background: ${config.terminalBg};
+                border-bottom-left-radius: 12px;
+                border-bottom-right-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                font-family: 'JetBrains Mono', monospace;
+                color: white;
+                z-index: 9999;
+                transform: translateX(-100%);
+                transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                pointer-events: none;
+            }
+    
+            .unified-interfaces.is-visible .terminal-container {
+                transform: translateX(0);
+                pointer-events: auto;
+            }
+    
+            /* --- Bottom Toolbar --- */
             .main-bottom-action-toolbar {
                 position: fixed;
                 bottom: -${bottomConfig.toolbarHeight};
                 left: 0;
-                right: 0;
+                right: ${config.terminalWidth}; /* Ends where terminal begins */
                 height: ${bottomConfig.toolbarHeight};
                 background: ${bottomConfig.colors.mainBackground};
                 display: flex;
@@ -1672,16 +1783,199 @@ javascript:(()=>{
                 padding: 0 20px;
                 box-sizing: border-box;
                 box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
-                transition: bottom 0.3s ease-out;
-                z-index: 9999;
+                transition: bottom 0.3s ease-out, right 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                z-index: 9998;
                 border-top-left-radius: 10px;
                 border-top-right-radius: 10px;
             }
-            .main-bottom-action-toolbar.is-visible {
+    
+            .unified-interfaces.is-visible .main-bottom-action-toolbar {
                 bottom: 0;
+                right: 0; /* NEW: Toolbar spans full width when terminal is open */
             }
-
-            /* Toolbar Buttons */
+    
+            /* When interfaces are closed, toolbar spans full width */
+            .unified-interfaces:not(.is-visible) .main-bottom-action-toolbar {
+                right: 0;
+            }
+            
+            /* --- Terminal Output & Input --- */
+            .terminal-output {
+                flex: 1;
+                padding: 20px;
+                overflow-y: auto;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                line-height: 1.5;
+                font-size: 14px;
+                -webkit-overflow-scrolling: touch;
+            }
+    
+            .terminal-line {
+                margin-bottom: 5px;
+                opacity: 0;
+                animation: fadeInUp 0.3s ease-out forwards;
+            }
+    
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+    
+            .terminal-prompt {
+                color: ${config.promptColor};
+            }
+    
+            .terminal-success {
+                color: ${config.successColor};
+            }
+            
+            /* --- Processing Message --- */
+            .processing-message-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                text-align: center;
+                padding: 15px;
+                background: linear-gradient(90deg, rgba(0, 0, 0, 0.8), rgba(138, 43, 226, 0.2), rgba(0, 0, 0, 0.8));
+                color: ${config.processingColor};
+                font-size: 1.5em;
+                font-weight: bold;
+                display: none;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                z-index: 10001;
+                border-bottom: 2px solid ${config.processingColor};
+                backdrop-filter: blur(10px);
+            }
+            
+            .processing-message-container.is-visible {
+                display: flex;
+                animation: slideInDown 0.3s ease-out;
+            }
+    
+            @keyframes slideInDown {
+                from {
+                    transform: translateY(-100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+    
+            .processing-gear {
+                animation: rotate 1.5s linear infinite;
+                filter: drop-shadow(0 0 5px ${config.processingColor});
+            }
+    
+            @keyframes rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+    
+            /* --- Ultra Run Switch --- */
+            .controls-container {
+                position: absolute;
+                top: 20px;
+                left: 20px; /* NEW: Positioned at the top left */
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 10002;
+            }
+    
+            .switch-label {
+                color: #fff;
+                font-size: 12px;
+                font-family: 'Inter', sans-serif;
+                text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+                order: 2; /* NEW: Move label after the switch */
+            }
+    
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 34px;
+                height: 20px;
+                order: 1; /* NEW: Move switch to the front */
+            }
+            
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: .4s;
+                border-radius: 20px;
+                box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+            }
+            
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 16px;
+                width: 16px;
+                left: 2px;
+                bottom: 2px;
+                background-color: white;
+                transition: .4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                border-radius: 50%;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            }
+            
+            input:checked + .slider {
+                background-color: ${config.successColor};
+                box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 204, 0, 0.3);
+            }
+            
+            input:checked + .slider:before {
+                transform: translateX(14px);
+            }
+    
+            .terminal-input-container {
+                display: flex;
+                align-items: center;
+                padding: 15px 20px;
+                border-top: 1px solid #333;
+                background: rgba(0, 0, 0, 0.2);
+                backdrop-filter: blur(10px);
+            }
+    
+            #terminal-input {
+                flex: 1;
+                background: transparent;
+                border: none;
+                outline: none;
+                color: white;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 14px;
+                caret-color: ${config.terminalText};
+            }
+    
+            #terminal-input:focus {
+                text-shadow: 0 0 5px ${config.terminalText};
+            }
+    
+            /* --- Bottom Toolbar Buttons --- */
             .bottom-toolbar-action-button {
                 width: ${bottomConfig.buttonSize};
                 height: ${bottomConfig.buttonSize};
@@ -1704,8 +1998,8 @@ javascript:(()=>{
             .bottom-toolbar-action-button:active {
                 transform: translateY(0);
             }
-
-            /* Tooltip */
+    
+            /* --- Tooltip --- */
             .bottom-toolbar-tooltip {
                 position: absolute;
                 bottom: calc(100% + 10px);
@@ -1727,8 +2021,8 @@ javascript:(()=>{
                 opacity: 1;
                 visibility: visible;
             }
-
-            /* Message UIs (Fetched and Data Accessed) */
+    
+            /* --- Message UIs --- */
             .bottom-message-ui {
                 position: fixed;
                 top: 50%;
@@ -1750,43 +2044,106 @@ javascript:(()=>{
                 opacity: 1;
                 visibility: visible;
             }
-
+    
             .bottom-fetched-message {
                 background: ${bottomConfig.colors.fetchedBg};
                 color: ${bottomConfig.colors.fetchedText};
             }
-
+    
             .bottom-data-accessed-message {
                 background: ${bottomConfig.colors.dataAccessedBg};
                 color: ${bottomConfig.colors.dataAccessedText};
             }
+    
+            /* --- Enhanced Scrollbar --- */
+            .terminal-output::-webkit-scrollbar {
+                width: 8px;
+            }
+            .terminal-output::-webkit-scrollbar-track {
+                background: rgba(43, 43, 43, 0.5);
+                border-radius: 4px;
+            }
+            .terminal-output::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, #555, #777);
+                border-radius: 4px;
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
+            .terminal-output::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(180deg, #777, #999);
+            }
+    
+            /* --- Opening Animation --- */
+            .unified-interfaces.opening .terminal-container {
+                animation: pulseGlow 0.4s ease-out;
+            }
+    
+            @keyframes pulseGlow {
+                0% {
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                }
+                50% {
+                    box-shadow: 0 4px 30px rgba(0, 255, 0, 0.3), 0 4px 20px rgba(0, 0, 0, 0.4);
+                }
+                100% {
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                }
+            }
         `;
-        document.head.appendChild(bottomStyle);
-
-        // Create Elements
-        const bottomEditButton = document.createElement('button');
-        bottomEditButton.classList.add('bottom-edit-toggle-button');
-        bottomEditButton.innerText = 'Edit';
-        document.body.appendChild(bottomEditButton);
-
+        document.head.appendChild(styleSheet);
+    
+        // --- Create Unified HTML Structure ---
+        const toggleBtn = document.createElement('button');
+        toggleBtn.id = 'unified-toggle-btn';
+        toggleBtn.innerHTML = '<span class="unified-arrow-icon">&#9654;</span>'; // Right arrow when closed
+        toggleBtn.title = 'Open Terminal & Toolbar';
+        document.body.appendChild(toggleBtn);
+    
+        // Container for both interfaces
+        const unifiedContainer = document.createElement('div');
+        unifiedContainer.classList.add('unified-interfaces');
+        
+        // Terminal UI
+        const terminalUi = document.createElement('div');
+        terminalUi.id = 'terminal-ui';
+        terminalUi.classList.add('terminal-container');
+        terminalUi.innerHTML = `
+            <div id="terminal-output" class="terminal-output"></div>
+            <div id="processing-message" class="processing-message-container">
+                <span class="processing-gear">⚙️</span> Processing Command
+            </div>
+            <form id="terminal-form" class="terminal-input-container">
+                <span class="terminal-prompt">admin@client:~$ </span>
+                <input type="text" id="terminal-input" placeholder="Enter command..." autofocus>
+            </form>
+        `;
+    
+        // Bottom Toolbar
         const mainBottomToolbar = document.createElement('div');
         mainBottomToolbar.classList.add('main-bottom-action-toolbar');
-        document.body.appendChild(mainBottomToolbar);
-
+    
+        // Message UIs
         const bottomFetchedMessage = document.createElement('div');
         bottomFetchedMessage.classList.add('bottom-message-ui', 'bottom-fetched-message');
         bottomFetchedMessage.innerText = 'Fetched!';
-        document.body.appendChild(bottomFetchedMessage);
-
+    
         const bottomDataAccessedMessage = document.createElement('div');
         bottomDataAccessedMessage.classList.add('bottom-message-ui', 'bottom-data-accessed-message');
         bottomDataAccessedMessage.innerText = 'Data Accessed!';
+    
+        // Append to unified container and body
+        unifiedContainer.appendChild(terminalUi);
+        unifiedContainer.appendChild(mainBottomToolbar);
+        document.body.appendChild(unifiedContainer);
+        document.body.appendChild(bottomFetchedMessage);
         document.body.appendChild(bottomDataAccessedMessage);
-
-        // State Variables
-        let isBottomToolbarVisible = false;
-
-        // Helper to create toolbar buttons
+    
+        // --- Get References ---
+        const terminalInput = document.getElementById('terminal-input');
+        const terminalOutput = document.getElementById('terminal-output');
+        const processingMessage = document.getElementById('processing-message');
+        const terminalForm = document.getElementById('terminal-form');
+    
+        // --- Bottom Toolbar Functionality ---
         const createBottomToolbarButton = (iconClass, tooltipText, onClickHandler) => {
             const button = document.createElement('div');
             button.classList.add('bottom-toolbar-action-button');
@@ -1794,65 +2151,125 @@ javascript:(()=>{
             button.addEventListener('click', onClickHandler);
             return button;
         };
-
-        // Button Functionalities
-        const refreshPage = () => {
-            window.location.reload();
-        };
-
+    
+        const refreshPage = () => window.location.reload();
+        
         const crashPage = () => {
             console.warn("Attempting to simulate page crash...");
             try {
                 let hugeArray = [];
                 for (let i = 0; i < 10000000; i++) {
-                    hugeArray.push(new Array(1000).fill('crash_data_string_to_consume_memory_quickly_and_cause_issues'));
+                    hugeArray.push(new Array(1000).fill('crash_data_string'));
                 }
-                console.error("Page crash simulation initiated. If the tab doesn't crash, it might be due to browser safeguards.");
             } catch (e) {
                 console.error("Error during crash simulation:", e);
-                alert("Crash simulation failed or caught by browser. Check console for details.");
             }
         };
-
+    
         const showBottomFetchedUI = () => {
             bottomFetchedMessage.classList.add('is-visible');
-            setTimeout(() => {
-                bottomFetchedMessage.classList.remove('is-visible');
-            }, bottomConfig.messageUITimeout);
+            setTimeout(() => bottomFetchedMessage.classList.remove('is-visible'), bottomConfig.messageUITimeout);
         };
-
+    
         const showBottomDataAccessedUI = () => {
             bottomDataAccessedMessage.classList.add('is-visible');
-            setTimeout(() => {
-                bottomDataAccessedMessage.classList.remove('is-visible');
-            }, bottomConfig.messageUITimeout);
+            setTimeout(() => bottomDataAccessedMessage.classList.remove('is-visible'), bottomConfig.messageUITimeout);
         };
-
+    
         const teleportToBlooketPlay = () => {
             window.location.href = 'https://www.blooket.com/play';
         };
-
-        // Append Buttons to Toolbar
+    
+        // Add buttons to toolbar
         mainBottomToolbar.appendChild(createBottomToolbarButton('fas fa-sync-alt', 'Refresh Page', refreshPage));
         mainBottomToolbar.appendChild(createBottomToolbarButton('fas fa-bomb', 'Crash Page', crashPage));
         mainBottomToolbar.appendChild(createBottomToolbarButton('fas fa-cloud-download-alt', 'Fetch Data', showBottomFetchedUI));
         mainBottomToolbar.appendChild(createBottomToolbarButton('fas fa-database', 'Access Data', showBottomDataAccessedUI));
         mainBottomToolbar.appendChild(createBottomToolbarButton('fas fa-gamepad', 'Go to Blooket Play', teleportToBlooketPlay));
-
-        // Event Listener for Edit/Close Button
-        bottomEditButton.addEventListener('click', () => {
-            isBottomToolbarVisible = !isBottomToolbarVisible;
-            if (isBottomToolbarVisible) {
-                mainBottomToolbar.classList.add('is-visible');
-                bottomEditButton.innerText = 'Close';
+    
+        // --- Unified Toggle Functionality ---
+        toggleBtn.addEventListener('click', () => {
+            const isOpening = !unifiedContainer.classList.contains('is-visible');
+            const arrowIcon = toggleBtn.querySelector('.unified-arrow-icon');
+            
+            unifiedContainer.classList.toggle('is-visible');
+            
+            if (isOpening) {
+                unifiedContainer.classList.add('opening');
+                terminalInput.focus();
+                
+                arrowIcon.innerHTML = '&#9664;'; // Left arrow when open
+                toggleBtn.title = 'Close Terminal & Toolbar';
+                
+                setTimeout(() => {
+                    unifiedContainer.classList.remove('opening');
+                }, 400);
             } else {
-                mainBottomToolbar.classList.remove('is-visible');
-                bottomEditButton.innerText = 'Edit';
+                arrowIcon.innerHTML = '&#9654;'; // Right arrow when closed
+                toggleBtn.title = 'Open Terminal & Toolbar';
             }
         });
-
-        console.log("Bottom toolbar loaded.");
+    
+        // Keyboard shortcut (Ctrl/Cmd + `)
+        document.addEventListener('keydown', (event) => {
+            if ((event.ctrlKey || event.metaKey) && event.key === '`') {
+                event.preventDefault();
+                toggleBtn.click();
+            }
+        });
+    
+        // --- Terminal Functionality ---
+        function executeCommand(command) {
+            if (command.toLowerCase() === 'clear') {
+                terminalOutput.innerHTML = '';
+            } else if (command.toLowerCase() === 'help') {
+                const helpLine = document.createElement('div');
+                helpLine.classList.add('terminal-line', 'terminal-success');
+                helpLine.textContent = `Available commands: clear, help | Shortcut: Ctrl+\` to toggle interface`;
+                terminalOutput.appendChild(helpLine);
+            } else {
+                const responseLine = document.createElement('div');
+                responseLine.classList.add('terminal-line', 'terminal-success');
+                responseLine.textContent = `✓ Executed Admin Command Successfully: ${command}`;
+                terminalOutput.appendChild(responseLine);
+            }
+    
+            terminalInput.value = '';
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+    
+        terminalForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const command = terminalInput.value.trim();
+            if (command) {
+                const newCommandLine = document.createElement('div');
+                newCommandLine.classList.add('terminal-line');
+                newCommandLine.innerHTML = `<span class="terminal-prompt">admin@client:~$</span> ${command}`;
+                terminalOutput.appendChild(newCommandLine);
+                
+                if (ultraRunSwitch.checked) {
+                    executeCommand(command);
+                } else {
+                    processingMessage.classList.add('is-visible');
+                    setTimeout(() => {
+                        processingMessage.classList.remove('is-visible');
+                        executeCommand(command);
+                    }, 3000);
+                }
+            }
+        });
+    
+        // Initialize with welcome message
+        setTimeout(() => {
+            const welcomeMessage = document.createElement('div');
+            welcomeMessage.classList.add('terminal-line', 'terminal-prompt');
+            welcomeMessage.innerHTML = 'Welcome to the unified interface! Terminal + Toolbar combined. Type "help" for commands.';
+            terminalOutput.appendChild(welcomeMessage);
+        }, 100);
+    
+        console.log("Unified Terminal + Toolbar interface loaded.");
     })();
+    
 
     javascript:(()=>{
         let c = document.querySelector("iframe");
@@ -5858,731 +6275,746 @@ javascript:(()=>{
         }
     })();
 
-    javascript:// Blooket Client UI - Enhanced Interactive Interface
-    (function() {
-        'use strict';
+    // Blooket Client UI - Enhanced Interactive Interface
+(function() {
+    'use strict';
+
+    // --- NEW: Check and remove existing UI and toggle button if they exist ---
+    if (document.getElementById('blooket-client-ui')) {
+        document.getElementById('blooket-client-ui').remove();
+    }
+    if (document.getElementById('toggle-ui-btn')) {
+        document.getElementById('toggle-ui-btn').remove();
+    }
+
+    // --- NEW: Create and add the toggle button first, and set it to be closed initially ---
+    const toggleBtn = document.createElement('button');
+    toggleBtn.id = 'toggle-ui-btn';
+    toggleBtn.className = 'toggle-ui-btn closed';
+    toggleBtn.title = 'Toggle UI';
+    toggleBtn.innerHTML = '<span class="arrow-icon">▼</span>'; // Arrow pointing down when closed
+    document.body.appendChild(toggleBtn);
+
+    // Create main container for the UI
+    const clientUI = document.createElement('div');
+    clientUI.id = 'blooket-client-ui';
+    clientUI.className = 'ui-hidden'; // Start with the UI hidden
+    clientUI.innerHTML = `
+        <div id="client-window">
+            <div id="client-header">
+                <div id="client-title">
+                    <span>🎮 Client Pro</span>
+                </div>
+                <div id="client-controls">
+                    <button id="fullscreen-btn" title="Fullscreen">⛶</button>
+                    <button id="minimize-btn" title="Minimize">−</button>
+                    <button id="close-btn" title="Close">×</button>
+                </div>
+            </div>
     
-        // Check if UI already exists
-        if (document.getElementById('blooket-client-ui')) {
-            document.getElementById('blooket-client-ui').remove();
-        }
-    
-        // Create main container
-        const clientUI = document.createElement('div');
-        clientUI.id = 'blooket-client-ui';
-        clientUI.innerHTML = `
-            <div id="client-window">
-                <div id="client-header">
-                    <div id="client-title">
-                        <span>🎮 Client Pro</span>
+            <div id="client-body">
+                <div id="sidebar" class="sidebar-open">
+                    <div id="sidebar-header">
+                        <button id="sidebar-toggle">☰</button>
+                        <button id="sidebar-lock" title="Lock Sidebar">🔓</button>
                     </div>
-                    <div id="client-controls">
-                        <button id="fullscreen-btn" title="Fullscreen">⛶</button>
-                        <button id="minimize-btn" title="Minimize">−</button>
-                        <button id="close-btn" title="Close">×</button>
+                    <div id="sidebar-tabs">
+                        <button class="sidebar-tab active" data-tab="main">
+                            <span class="tab-icon">🏠</span>
+                            <span class="tab-label">Main</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="controls">
+                            <span class="tab-icon">🎮</span>
+                            <span class="tab-label">Controls</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="automation">
+                            <span class="tab-icon">🤖</span>
+                            <span class="tab-label">Automation</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="cheats">
+                            <span class="tab-icon">⚡</span>
+                            <span class="tab-label">Cheats</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="servers">
+                            <span class="tab-icon">🌐</span>
+                            <span class="tab-label">Servers</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="data">
+                            <span class="tab-icon">📊</span>
+                            <span class="tab-label">Data</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="firmware">
+                            <span class="tab-icon">💾</span>
+                            <span class="tab-label">Firmware</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="database">
+                            <span class="tab-icon">🗄️</span>
+                            <span class="tab-label">Database</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="client">
+                            <span class="tab-icon">💻</span>
+                            <span class="tab-label">Client</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="farm">
+                            <span class="tab-icon">🌾</span>
+                            <span class="tab-label">Farm</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="license">
+                            <span class="tab-icon">📜</span>
+                            <span class="tab-label">License</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="tools">
+                            <span class="tab-icon">🔧</span>
+                            <span class="tab-label">Tools</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="admin">
+                            <span class="tab-icon">👑</span>
+                            <span class="tab-label">Admin Commands</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="callbacks">
+                            <span class="tab-icon">📞</span>
+                            <span class="tab-label">Call Backs</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="logs">
+                            <span class="tab-icon">📋</span>
+                            <span class="tab-label">Logs</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="errors">
+                            <span class="tab-icon">❌</span>
+                            <span class="tab-label">Errors</span>
+                        </button>
+                        <button class="sidebar-tab" data-tab="system">
+                            <span class="tab-icon">🖥️</span>
+                            <span class="tab-label">System</span>
+                        </button>
                     </div>
                 </div>
-    
-                <div id="client-body">
-                    <div id="sidebar" class="sidebar-open">
-                        <div id="sidebar-header">
-                            <button id="sidebar-toggle">☰</button>
-                            <button id="sidebar-lock" title="Lock Sidebar">🔓</button>
-                        </div>
-                        <div id="sidebar-tabs">
-                            <button class="sidebar-tab active" data-tab="main">
-                                <span class="tab-icon">🏠</span>
-                                <span class="tab-label">Main</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="controls">
-                                <span class="tab-icon">🎮</span>
-                                <span class="tab-label">Controls</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="automation">
-                                <span class="tab-icon">🤖</span>
-                                <span class="tab-label">Automation</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="cheats">
-                                <span class="tab-icon">⚡</span>
-                                <span class="tab-label">Cheats</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="servers">
-                                <span class="tab-icon">🌐</span>
-                                <span class="tab-label">Servers</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="data">
-                                <span class="tab-icon">📊</span>
-                                <span class="tab-label">Data</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="firmware">
-                                <span class="tab-icon">💾</span>
-                                <span class="tab-label">Firmware</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="database">
-                                <span class="tab-icon">🗄️</span>
-                                <span class="tab-label">Database</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="client">
-                                <span class="tab-icon">💻</span>
-                                <span class="tab-label">Client</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="farm">
-                                <span class="tab-icon">🌾</span>
-                                <span class="tab-label">Farm</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="license">
-                                <span class="tab-icon">📜</span>
-                                <span class="tab-label">License</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="tools">
-                                <span class="tab-icon">🔧</span>
-                                <span class="tab-label">Tools</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="admin">
-                                <span class="tab-icon">👑</span>
-                                <span class="tab-label">Admin Commands</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="callbacks">
-                                <span class="tab-icon">📞</span>
-                                <span class="tab-label">Call Backs</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="logs">
-                                <span class="tab-icon">📋</span>
-                                <span class="tab-label">Logs</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="errors">
-                                <span class="tab-icon">❌</span>
-                                <span class="tab-label">Errors</span>
-                            </button>
-                            <button class="sidebar-tab" data-tab="system">
-                                <span class="tab-icon">🖥️</span>
-                                <span class="tab-label">System</span>
-                            </button>
+        
+                <div id="client-content">
+                    <div id="main-tab" class="tab-content active">
+                        <h2>Main Dashboard</h2>
+                        <div class="dashboard-grid">
+                            <div class="feature-card large">
+                                <h3>Game Statistics</h3>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="stat-label">Current Score</span>
+                                        <span class="stat-value" id="current-score">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Questions</span>
+                                        <span class="stat-value" id="question-count">0</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Accuracy</span>
+                                        <span class="stat-value" id="accuracy">100%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-label">Time Played</span>
+                                        <span class="stat-value" id="time-played">0:00</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="feature-card">
+                                <h3>Quick Actions</h3>
+                                <div class="action-grid">
+                                    <button class="action-btn primary">Auto Answer</button>
+                                    <button class="action-btn secondary">Skip Question</button>
+                                    <button class="action-btn success">Get Powerups</button>
+                                    <button class="action-btn danger">Reset Game</button>
+                                </div>
+                            </div>
+                    
+                            <div class="feature-card">
+                                <h3>Game Status</h3>
+                                <div class="status-indicators">
+                                    <div class="status-item">
+                                        <span class="status-dot active"></span>
+                                        <span>Bot Status: Active</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-dot inactive"></span>
+                                        <span>Auto Mode: Disabled</span>
+                                    </div>
+                                    <div class="status-item">
+                                        <span class="status-dot warning"></span>
+                                        <span>Detection Risk: Low</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-    
-                    <div id="client-content">
-                        <div id="main-tab" class="tab-content active">
-                            <h2>Main Dashboard</h2>
-                            <div class="dashboard-grid">
-                                <div class="feature-card large">
-                                    <h3>Game Statistics</h3>
-                                    <div class="stats-grid">
-                                        <div class="stat-item">
-                                            <span class="stat-label">Current Score</span>
-                                            <span class="stat-value" id="current-score">0</span>
-                                        </div>
-                                        <div class="stat-item">
-                                            <span class="stat-label">Questions</span>
-                                            <span class="stat-value" id="question-count">0</span>
-                                        </div>
-                                        <div class="stat-item">
-                                            <span class="stat-label">Accuracy</span>
-                                            <span class="stat-value" id="accuracy">100%</span>
-                                        </div>
-                                        <div class="stat-item">
-                                            <span class="stat-label">Time Played</span>
-                                            <span class="stat-value" id="time-played">0:00</span>
-                                        </div>
+            
+                    <div id="controls-tab" class="tab-content">
+                        <h2>Game Controls</h2>
+                        <div class="controls-grid">
+                            <div class="control-panel">
+                                <h3>Basic Controls</h3>
+                                <div class="control-group">
+                                    <label class="control-label">
+                                        <input type="checkbox" id="auto-play"> 
+                                        <span class="checkmark"></span>
+                                        Auto Play Mode
+                                    </label>
+                                    <label class="control-label">
+                                        <input type="checkbox" id="fast-mode"> 
+                                        <span class="checkmark"></span>
+                                        Fast Mode
+                                    </label>
+                                    <label class="control-label">
+                                        <input type="checkbox" id="god-mode"> 
+                                        <span class="checkmark"></span>
+                                        God Mode
+                                    </label>
+                                </div>
+                    
+                                <div class="slider-group">
+                                    <label>Speed Control</label>
+                                    <input type="range" id="speed-slider" min="1" max="10" value="5">
+                                    <span class="slider-value" id="speed-value">5</span>
+                                </div>
+                    
+                                <div class="slider-group">
+                                    <label>Answer Delay (ms)</label>
+                                    <input type="range" id="delay-slider" min="0" max="5000" value="1000" step="100">
+                                    <span class="slider-value" id="delay-value">1000ms</span>
+                                </div>
+                            </div>
+                    
+                            <div class="control-panel">
+                                <h3>Advanced Controls</h3>
+                                <div class="button-grid">
+                                    <button class="control-btn start">Start Bot</button>
+                                    <button class="control-btn stop">Stop Bot</button>
+                                    <button class="control-btn pause">Pause Game</button>
+                                    <button class="control-btn resume">Resume Game</button>
+                                    <button class="control-btn restart">Restart Round</button>
+                                    <button class="control-btn emergency">Emergency Stop</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="automation-tab" class="tab-content">
+                        <h2>Automation Suite</h2>
+                        <div class="automation-panels">
+                            <div class="auto-panel">
+                                <h3>Question Automation</h3>
+                                <div class="auto-options">
+                                    <button class="auto-btn">Auto Correct Answers</button>
+                                    <button class="auto-btn">Smart Guessing</button>
+                                    <button class="auto-btn">Pattern Recognition</button>
+                                </div>
+                            </div>
+                    
+                            <div class="auto-panel">
+                                <h3>Game Automation</h3>
+                                <div class="auto-options">
+                                    <button class="auto-btn">Auto Join Games</button>
+                                    <button class="auto-btn">Auto Rejoin</button>
+                                    <button class="auto-btn">Farm Mode</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="servers-tab" class="tab-content">
+                        <h2>Server Management</h2>
+                        <div class="server-panels">
+                            <div class="server-panel">
+                                <h3>Server Status</h3>
+                                <div class="server-list">
+                                    <div class="server-item">
+                                        <span class="server-dot online"></span>
+                                        <span class="server-name">US-East-1</span>
+                                        <span class="server-ping">23ms</span>
+                                    </div>
+                                    <div class="server-item">
+                                        <span class="server-dot online"></span>
+                                        <span class="server-name">EU-West-1</span>
+                                        <span class="server-ping">45ms</span>
+                                    </div>
+                                    <div class="server-item">
+                                        <span class="server-dot offline"></span>
+                                        <span class="server-name">Asia-Pacific</span>
+                                        <span class="server-ping">--ms</span>
                                     </div>
                                 </div>
-    
-                                <div class="feature-card">
-                                    <h3>Quick Actions</h3>
-                                    <div class="action-grid">
-                                        <button class="action-btn primary">Auto Answer</button>
-                                        <button class="action-btn secondary">Skip Question</button>
-                                        <button class="action-btn success">Get Powerups</button>
-                                        <button class="action-btn danger">Reset Game</button>
-                                    </div>
-                                </div>
-    
-                                <div class="feature-card">
-                                    <h3>Game Status</h3>
-                                    <div class="status-indicators">
-                                        <div class="status-item">
-                                            <span class="status-dot active"></span>
-                                            <span>Bot Status: Active</span>
-                                        </div>
-                                        <div class="status-item">
-                                            <span class="status-dot inactive"></span>
-                                            <span>Auto Mode: Disabled</span>
-                                        </div>
-                                        <div class="status-item">
-                                            <span class="status-dot warning"></span>
-                                            <span>Detection Risk: Low</span>
-                                        </div>
+                                <button class="server-btn">Refresh Servers</button>
+                            </div>
+                    
+                            <div class="server-panel">
+                                <h3>Connection Settings</h3>
+                                <div class="connection-settings">
+                                    <label class="control-label">
+                                        <input type="checkbox" id="auto-connect" checked>
+                                        <span class="checkmark"></span>
+                                        Auto Connect
+                                    </label>
+                                    <label class="control-label">
+                                        <input type="checkbox" id="proxy-enabled">
+                                        <span class="checkmark"></span>
+                                        Use Proxy
+                                    </label>
+                                    <div class="input-group">
+                                        <label>Custom Server URL:</label>
+                                        <input type="text" placeholder="wss://custom-server.com" class="server-input">
                                     </div>
                                 </div>
                             </div>
                         </div>
-    
-                        <div id="controls-tab" class="tab-content">
-                            <h2>Game Controls</h2>
-                            <div class="controls-grid">
-                                <div class="control-panel">
-                                    <h3>Basic Controls</h3>
-                                    <div class="control-group">
-                                        <label class="control-label">
-                                            <input type="checkbox" id="auto-play"> 
-                                            <span class="checkmark"></span>
-                                            Auto Play Mode
-                                        </label>
-                                        <label class="control-label">
-                                            <input type="checkbox" id="fast-mode"> 
-                                            <span class="checkmark"></span>
-                                            Fast Mode
-                                        </label>
-                                        <label class="control-label">
-                                            <input type="checkbox" id="god-mode"> 
-                                            <span class="checkmark"></span>
-                                            God Mode
-                                        </label>
+                    </div>
+            
+                    <div id="data-tab" class="tab-content">
+                        <h2>Data Analytics</h2>
+                        <div class="data-dashboard">
+                            <div class="data-card">
+                                <h3>Game Statistics</h3>
+                                <div class="data-metrics">
+                                    <div class="metric">
+                                        <span class="metric-label">Total Games</span>
+                                        <span class="metric-value" id="total-games">1,247</span>
                                     </div>
-    
-                                    <div class="slider-group">
-                                        <label>Speed Control</label>
-                                        <input type="range" id="speed-slider" min="1" max="10" value="5">
-                                        <span class="slider-value" id="speed-value">5</span>
+                                    <div class="metric">
+                                        <span class="metric-label">Win Rate</span>
+                                        <span class="metric-value" id="win-rate">87.3%</span>
                                     </div>
-    
-                                    <div class="slider-group">
-                                        <label>Answer Delay (ms)</label>
-                                        <input type="range" id="delay-slider" min="0" max="5000" value="1000" step="100">
-                                        <span class="slider-value" id="delay-value">1000ms</span>
+                                    <div class="metric">
+                                        <span class="metric-label">Avg Score</span>
+                                        <span class="metric-value" id="avg-score">8,542</span>
                                     </div>
                                 </div>
-    
-                                <div class="control-panel">
-                                    <h3>Advanced Controls</h3>
-                                    <div class="button-grid">
-                                        <button class="control-btn start">Start Bot</button>
-                                        <button class="control-btn stop">Stop Bot</button>
-                                        <button class="control-btn pause">Pause Game</button>
-                                        <button class="control-btn resume">Resume Game</button>
-                                        <button class="control-btn restart">Restart Round</button>
-                                        <button class="control-btn emergency">Emergency Stop</button>
+                            </div>
+                    
+                            <div class="data-card">
+                                <h3>Performance Data</h3>
+                                <div class="performance-chart">
+                                    <div class="chart-placeholder">📈 Performance Chart</div>
+                                    <button class="data-btn">Export Data</button>
+                                    <button class="data-btn">Clear History</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="firmware-tab" class="tab-content">
+                        <h2>Firmware Management</h2>
+                        <div class="firmware-sections">
+                            <div class="firmware-panel">
+                                <h3>Current Version</h3>
+                                <div class="version-info">
+                                    <div class="version-display">v2.1.7-stable</div>
+                                    <div class="version-date">Released: 2024-07-20</div>
+                                    <div class="version-status">Status: Up to date</div>
+                                </div>
+                            </div>
+                    
+                            <div class="firmware-panel">
+                                <h3>Update Management</h3>
+                                <div class="update-controls">
+                                    <button class="firmware-btn primary">Check Updates</button>
+                                    <button class="firmware-btn secondary">Download Beta</button>
+                                    <button class="firmware-btn danger">Factory Reset</button>
+                                    <div class="update-progress">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 0%"></div>
+                                        </div>
+                                        <div class="progress-text">Ready for updates</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-    
-                        <div id="automation-tab" class="tab-content">
-                            <h2>Automation Suite</h2>
-                            <div class="automation-panels">
-                                <div class="auto-panel">
-                                    <h3>Question Automation</h3>
-                                    <div class="auto-options">
-                                        <button class="auto-btn">Auto Correct Answers</button>
-                                        <button class="auto-btn">Smart Guessing</button>
-                                        <button class="auto-btn">Pattern Recognition</button>
+                    </div>
+            
+                    <div id="database-tab" class="tab-content">
+                        <h2>Database Management</h2>
+                        <div class="database-grid">
+                            <div class="db-panel">
+                                <h3>Database Status</h3>
+                                <div class="db-stats">
+                                    <div class="db-stat">
+                                        <span class="stat-label">Records</span>
+                                        <span class="stat-value">45,892</span>
+                                    </div>
+                                    <div class="db-stat">
+                                        <span class="stat-label">Size</span>
+                                        <span class="stat-value">127MB</span>
+                                    </div>
+                                    <div class="db-stat">
+                                        <span class="stat-label">Last Sync</span>
+                                        <span class="stat-value">2 min ago</span>
                                     </div>
                                 </div>
-    
-                                <div class="auto-panel">
-                                    <h3>Game Automation</h3>
-                                    <div class="auto-options">
-                                        <button class="auto-btn">Auto Join Games</button>
-                                        <button class="auto-btn">Auto Rejoin</button>
-                                        <button class="auto-btn">Farm Mode</button>
+                            </div>
+                    
+                            <div class="db-panel">
+                                <h3>Operations</h3>
+                                <div class="db-operations">
+                                    <button class="db-btn">Backup Database</button>
+                                    <button class="db-btn">Restore Backup</button>
+                                    <button class="db-btn">Optimize Tables</button>
+                                    <button class="db-btn">Clear Cache</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="client-tab" class="tab-content">
+                        <h2>Client Configuration</h2>
+                        <div class="client-config">
+                            <div class="config-section">
+                                <h3>Client Information</h3>
+                                <div class="client-info">
+                                    <div class="info-row">
+                                        <span class="info-label">Client ID:</span>
+                                        <span class="info-value">CL-7F4A-92B8-E156</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Session:</span>
+                                        <span class="info-value">Active (2h 15m)</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">IP Address:</span>
+                                        <span class="info-value">192.168.1.142</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="config-section">
+                                <h3>Client Settings</h3>
+                                <div class="client-settings">
+                                    <label class="control-label">
+                                        <input type="checkbox" id="stealth-mode" checked>
+                                        <span class="checkmark"></span>
+                                        Stealth Mode
+                                    </label>
+                                    <label class="control-label">
+                                        <input type="checkbox" id="debug-mode">
+                                        <span class="checkmark"></span>
+                                        Debug Mode
+                                    </label>
+                                    <button class="client-btn">Regenerate ID</button>
+                                    <button class="client-btn">Reset Session</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="farm-tab" class="tab-content">
+                        <h2>Farming Operations</h2>
+                        <div class="farm-dashboard">
+                            <div class="farm-stats">
+                                <h3>Farm Statistics</h3>
+                                <div class="farm-metrics">
+                                    <div class="farm-metric">
+                                        <span class="metric-icon">🌱</span>
+                                        <span class="metric-label">Active Farms</span>
+                                        <span class="metric-value">7</span>
+                                    </div>
+                                    <div class="farm-metric">
+                                        <span class="metric-icon">💰</span>
+                                        <span class="metric-label">Total Earned</span>
+                                        <span class="metric-value">28,945</span>
+                                    </div>
+                                    <div class="farm-metric">
+                                        <span class="metric-icon">⏱️</span>
+                                        <span class="metric-label">Uptime</span>
+                                        <span class="metric-value">14h 32m</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="farm-controls">
+                                <h3>Farm Controls</h3>
+                                <div class="farm-buttons">
+                                    <button class="farm-btn start">Start All Farms</button>
+                                    <button class="farm-btn stop">Stop All Farms</button>
+                                    <button class="farm-btn pause">Pause Farming</button>
+                                    <button class="farm-btn config">Configure Farms</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="license-tab" class="tab-content">
+                        <h2>License Management</h2>
+                        <div class="license-info">
+                            <div class="license-card">
+                                <h3>Current License</h3>
+                                <div class="license-details">
+                                    <div class="license-type">Premium Pro License</div>
+                                    <div class="license-key">PRO-2024-7F4A-92B8-E156-XYZQ</div>
+                                    <div class="license-expiry">Expires: December 31, 2024</div>
+                                    <div class="license-status active">Status: Active</div>
+                                </div>
+                            </div>
+                    
+                            <div class="license-actions">
+                                <h3>License Actions</h3>
+                                <div class="license-buttons">
+                                    <button class="license-btn">Validate License</button>
+                                    <button class="license-btn">Renew License</button>
+                                    <button class="license-btn">Transfer License</button>
+                                    <button class="license-btn">View History</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="tools-tab" class="tab-content">
+                        <h2>Development Tools</h2>
+                        <div class="tools-grid">
+                            <div class="tool-category">
+                                <h3>Debug Tools</h3>
+                                <div class="tool-buttons">
+                                    <button class="tool-btn">Network Monitor</button>
+                                    <button class="tool-btn">Memory Profiler</button>
+                                    <button class="tool-btn">Performance Analyzer</button>
+                                    <button class="tool-btn">Console Logger</button>
+                                </div>
+                            </div>
+                    
+                            <div class="tool-category">
+                                <h3>Utility Tools</h3>
+                                <div class="tool-buttons">
+                                    <button class="tool-btn">Script Editor</button>
+                                    <button class="tool-btn">Packet Sniffer</button>
+                                    <button class="tool-btn">Hash Generator</button>
+                                    <button class="tool-btn">JSON Formatter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="admin-tab" class="tab-content">
+                        <h2>Admin Commands</h2>
+                        <div class="admin-interface">
+                            <div class="command-terminal">
+                                <h3>Command Terminal</h3>
+                                <div class="terminal-output" id="terminal-output">
+                                    <div class="terminal-line">$ Welcome to Admin Terminal</div>
+                                    <div class="terminal-line">$ Type 'help' for available commands</div>
+                                </div>
+                                <div class="terminal-input">
+                                    <span class="terminal-prompt">admin@client:~$ </span>
+                                    <input type="text" id="admin-command" class="command-input" placeholder="Enter command...">
+                                </div>
+                            </div>
+                    
+                            <div class="quick-commands">
+                                <h3>Quick Commands</h3>
+                                <div class="command-buttons">
+                                    <button class="cmd-btn" data-cmd="status">System Status</button>
+                                    <button class="cmd-btn" data-cmd="restart">Restart Services</button>
+                                    <button class="cmd-btn" data-cmd="backup">Create Backup</button>
+                                    <button class="cmd-btn" data-cmd="clear">Clear Logs</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="callbacks-tab" class="tab-content">
+                        <h2>Callback Management</h2>
+                        <div class="callback-dashboard">
+                            <div class="callback-stats">
+                                <h3>Callback Statistics</h3>
+                                <div class="callback-metrics">
+                                    <div class="callback-metric">
+                                        <span class="metric-label">Active Callbacks</span>
+                                        <span class="metric-value">12</span>
+                                    </div>
+                                    <div class="callback-metric">
+                                        <span class="metric-label">Success Rate</span>
+                                        <span class="metric-value">94.7%</span>
+                                    </div>
+                                    <div class="callback-metric">
+                                        <span class="metric-label">Avg Response</span>
+                                        <span class="metric-value">147ms</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="callback-list">
+                                <h3>Recent Callbacks</h3>
+                                <div class="callback-items">
+                                    <div class="callback-item">
+                                        <span class="callback-status success"></span>
+                                        <span class="callback-url">https://api.example.com/webhook</span>
+                                        <span class="callback-time">2 min ago</span>
+                                    </div>
+                                    <div class="callback-item">
+                                        <span class="callback-status success"></span>
+                                        <span class="callback-url">https://hooks.slack.com/services/...</span>
+                                        <span class="callback-time">5 min ago</span>
+                                    </div>
+                                    <div class="callback-item">
+                                        <span class="callback-status failed"></span>
+                                        <span class="callback-url">https://discord.com/api/webhooks/...</span>
+                                        <span class="callback-time">12 min ago</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-    
-                        <div id="servers-tab" class="tab-content">
-                            <h2>Server Management</h2>
-                            <div class="server-panels">
-                                <div class="server-panel">
-                                    <h3>Server Status</h3>
-                                    <div class="server-list">
-                                        <div class="server-item">
-                                            <span class="server-dot online"></span>
-                                            <span class="server-name">US-East-1</span>
-                                            <span class="server-ping">23ms</span>
-                                        </div>
-                                        <div class="server-item">
-                                            <span class="server-dot online"></span>
-                                            <span class="server-name">EU-West-1</span>
-                                            <span class="server-ping">45ms</span>
-                                        </div>
-                                        <div class="server-item">
-                                            <span class="server-dot offline"></span>
-                                            <span class="server-name">Asia-Pacific</span>
-                                            <span class="server-ping">--ms</span>
-                                        </div>
-                                    </div>
-                                    <button class="server-btn">Refresh Servers</button>
+                    </div>
+            
+                    <div id="logs-tab" class="tab-content">
+                        <h2>System Logs</h2>
+                        <div class="logs-interface">
+                            <div class="log-controls">
+                                <select class="log-filter">
+                                    <option value="all">All Logs</option>
+                                    <option value="info">Info</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="error">Error</option>
+                                </select>
+                                <button class="log-btn">Refresh</button>
+                                <button class="log-btn">Clear</button>
+                                <button class="log-btn">Export</button>
+                            </div>
+                    
+                            <div class="log-viewer" id="log-viewer">
+                                <div class="log-entry info">
+                                    <span class="log-time">15:42:18</span>
+                                    <span class="log-level info">INFO</span>
+                                    <span class="log-message">Client connected successfully</span>
                                 </div>
-    
-                                <div class="server-panel">
-                                    <h3>Connection Settings</h3>
-                                    <div class="connection-settings">
-                                        <label class="control-label">
-                                            <input type="checkbox" id="auto-connect" checked>
-                                            <span class="checkmark"></span>
-                                            Auto Connect
-                                        </label>
-                                        <label class="control-label">
-                                            <input type="checkbox" id="proxy-enabled">
-                                            <span class="checkmark"></span>
-                                            Use Proxy
-                                        </label>
-                                        <div class="input-group">
-                                            <label>Custom Server URL:</label>
-                                            <input type="text" placeholder="wss://custom-server.com" class="server-input">
-                                        </div>
+                                <div class="log-entry warning">
+                                    <span class="log-time">15:41:55</span>
+                                    <span class="log-level warning">WARN</span>
+                                    <span class="log-message">High memory usage detected (78%)</span>
+                                </div>
+                                <div class="log-entry info">
+                                    <span class="log-time">15:41:32</span>
+                                    <span class="log-level info">INFO</span>
+                                    <span class="log-message">Automation script started</span>
+                                </div>
+                                <div class="log-entry error">
+                                    <span class="log-time">15:40:12</span>
+                                    <span class="log-level error">ERROR</span>
+                                    <span class="log-message">Failed to connect to server (timeout)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <div id="errors-tab" class="tab-content">
+                        <h2>Error Management</h2>
+                        <div class="error-dashboard">
+                            <div class="error-summary">
+                                <h3>Error Summary</h3>
+                                <div class="error-stats">
+                                    <div class="error-stat critical">
+                                        <span class="error-count">3</span>
+                                        <span class="error-label">Critical</span>
+                                    </div>
+                                    <div class="error-stat high">
+                                        <span class="error-count">7</span>
+                                        <span class="error-label">High</span>
+                                    </div>
+                                    <div class="error-stat medium">
+                                        <span class="error-count">12</span>
+                                        <span class="error-label">Medium</span>
+                                    </div>
+                                    <div class="error-stat low">
+                                        <span class="error-count">25</span>
+                                        <span class="error-label">Low</span>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="error-list">
+                                <h3>Recent Errors</h3>
+                                <div class="error-items">
+                                    <div class="error-item critical">
+                                        <span class="error-severity">CRITICAL</span>
+                                        <span class="error-desc">Database connection lost</span>
+                                        <span class="error-time">3 min ago</span>
+                                    </div>
+                                    <div class="error-item high">
+                                        <span class="error-severity">HIGH</span>
+                                        <span class="error-desc">Memory leak detected in module</span>
+                                        <span class="error-time">8 min ago</span>
+                                    </div>
+                                    <div class="error-item medium">
+                                        <span class="error-severity">MEDIUM</span>
+                                        <span class="error-desc">API rate limit exceeded</span>
+                                        <span class="error-time">15 min ago</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-    
-                        <div id="data-tab" class="tab-content">
-                            <h2>Data Analytics</h2>
-                            <div class="data-dashboard">
-                                <div class="data-card">
-                                    <h3>Game Statistics</h3>
-                                    <div class="data-metrics">
-                                        <div class="metric">
-                                            <span class="metric-label">Total Games</span>
-                                            <span class="metric-value" id="total-games">1,247</span>
-                                        </div>
-                                        <div class="metric">
-                                            <span class="metric-label">Win Rate</span>
-                                            <span class="metric-value" id="win-rate">87.3%</span>
-                                        </div>
-                                        <div class="metric">
-                                            <span class="metric-label">Avg Score</span>
-                                            <span class="metric-value" id="avg-score">8,542</span>
-                                        </div>
-                                    </div>
-                                </div>
-    
-                                <div class="data-card">
-                                    <h3>Performance Data</h3>
-                                    <div class="performance-chart">
-                                        <div class="chart-placeholder">📈 Performance Chart</div>
-                                        <button class="data-btn">Export Data</button>
-                                        <button class="data-btn">Clear History</button>
-                                    </div>
-                                </div>
+                    </div>
+            
+                    <div id="cheats-tab" class="tab-content">
+                        <h2>Cheat Engine</h2>
+                        <div class="cheats-warning">
+                            ⚠️ Use these features responsibly
+                        </div>
+                        <div class="cheats-grid">
+                            <div class="cheat-category">
+                                <h3>Score Cheats</h3>
+                                <button class="cheat-btn">Max Score</button>
+                                <button class="cheat-btn">Add 1000 Points</button>
+                                <button class="cheat-btn">Infinite Coins</button>
+                            </div>
+                    
+                            <div class="cheat-category">
+                                <h3>Game Cheats</h3>
+                                <button class="cheat-btn">Skip to End</button>
+                                <button class="cheat-btn">Reveal Answers</button>
+                                <button class="cheat-btn">Time Freeze</button>
                             </div>
                         </div>
-    
-                        <div id="firmware-tab" class="tab-content">
-                            <h2>Firmware Management</h2>
-                            <div class="firmware-sections">
-                                <div class="firmware-panel">
-                                    <h3>Current Version</h3>
-                                    <div class="version-info">
-                                        <div class="version-display">v2.1.7-stable</div>
-                                        <div class="version-date">Released: 2024-07-20</div>
-                                        <div class="version-status">Status: Up to date</div>
+                    </div>
+                    
+                    <div id="system-tab" class="tab-content active">
+                        <h2>System Information</h2>
+                        <div class="system-grid">
+                            <div class="system-panel">
+                                <h3>System Resources</h3>
+                                <div class="resource-monitors">
+                                    <div class="resource-item">
+                                        <span class="resource-label">CPU Usage</span>
+                                        <div class="resource-bar">
+                                            <div class="resource-fill" style="width: 34%"></div>
+                                        </div>
+                                        <span class="resource-value">34%</span>
                                     </div>
-                                </div>
-    
-                                <div class="firmware-panel">
-                                    <h3>Update Management</h3>
-                                    <div class="update-controls">
-                                        <button class="firmware-btn primary">Check Updates</button>
-                                        <button class="firmware-btn secondary">Download Beta</button>
-                                        <button class="firmware-btn danger">Factory Reset</button>
-                                        <div class="update-progress">
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: 0%"></div>
-                                            </div>
-                                            <div class="progress-text">Ready for updates</div>
+                                    <div class="resource-item">
+                                        <span class="resource-label">Memory</span>
+                                        <div class="resource-bar">
+                                            <div class="resource-fill" style="width: 67%"></div>
                                         </div>
+                                        <span class="resource-value">67%</span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="database-tab" class="tab-content">
-                            <h2>Database Management</h2>
-                            <div class="database-grid">
-                                <div class="db-panel">
-                                    <h3>Database Status</h3>
-                                    <div class="db-stats">
-                                        <div class="db-stat">
-                                            <span class="stat-label">Records</span>
-                                            <span class="stat-value">45,892</span>
+                                    <div class="resource-item">
+                                        <span class="resource-label">Disk I/O</span>
+                                        <div class="resource-bar">
+                                            <div class="resource-fill" style="width: 23%"></div>
                                         </div>
-                                        <div class="db-stat">
-                                            <span class="stat-label">Size</span>
-                                            <span class="stat-value">127MB</span>
-                                        </div>
-                                        <div class="db-stat">
-                                            <span class="stat-label">Last Sync</span>
-                                            <span class="stat-value">2 min ago</span>
-                                        </div>
-                                    </div>
-                                </div>
-    
-                                <div class="db-panel">
-                                    <h3>Operations</h3>
-                                    <div class="db-operations">
-                                        <button class="db-btn">Backup Database</button>
-                                        <button class="db-btn">Restore Backup</button>
-                                        <button class="db-btn">Optimize Tables</button>
-                                        <button class="db-btn">Clear Cache</button>
+                                        <span class="resource-value">23%</span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-    
-                        <div id="client-tab" class="tab-content">
-                            <h2>Client Configuration</h2>
-                            <div class="client-config">
-                                <div class="config-section">
-                                    <h3>Client Information</h3>
-                                    <div class="client-info">
-                                        <div class="info-row">
-                                            <span class="info-label">Client ID:</span>
-                                            <span class="info-value">CL-7F4A-92B8-E156</span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Session:</span>
-                                            <span class="info-value">Active (2h 15m)</span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">IP Address:</span>
-                                            <span class="info-value">192.168.1.142</span>
-                                        </div>
+                            <div class="system-panel">
+                                <h3>System Details</h3>
+                                <div class="system-info">
+                                    <div class="info-row">
+                                        <span class="info-label">OS:</span>
+                                        <span class="info-value">Windows 11 Pro</span>
                                     </div>
-                                </div>
-    
-                                <div class="config-section">
-                                    <h3>Client Settings</h3>
-                                    <div class="client-settings">
-                                        <label class="control-label">
-                                            <input type="checkbox" id="stealth-mode" checked>
-                                            <span class="checkmark"></span>
-                                            Stealth Mode
-                                        </label>
-                                        <label class="control-label">
-                                            <input type="checkbox" id="debug-mode">
-                                            <span class="checkmark"></span>
-                                            Debug Mode
-                                        </label>
-                                        <button class="client-btn">Regenerate ID</button>
-                                        <button class="client-btn">Reset Session</button>
+                                    <div class="info-row">
+                                        <span class="info-label">Browser:</span>
+                                        <span class="info-value">Chrome 115.0.5790</span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="farm-tab" class="tab-content">
-                            <h2>Farming Operations</h2>
-                            <div class="farm-dashboard">
-                                <div class="farm-stats">
-                                    <h3>Farm Statistics</h3>
-                                    <div class="farm-metrics">
-                                        <div class="farm-metric">
-                                            <span class="metric-icon">🌱</span>
-                                            <span class="metric-label">Active Farms</span>
-                                            <span class="metric-value">7</span>
-                                        </div>
-                                        <div class="farm-metric">
-                                            <span class="metric-icon">💰</span>
-                                            <span class="metric-label">Total Earned</span>
-                                            <span class="metric-value">28,945</span>
-                                        </div>
-                                        <div class="farm-metric">
-                                            <span class="metric-icon">⏱️</span>
-                                            <span class="metric-label">Uptime</span>
-                                            <span class="metric-value">14h 32m</span>
-                                        </div>
+                                    <div class="info-row">
+                                        <span class="info-label">RAM:</span>
+                                        <span class="info-value">16GB DDR4</span>
                                     </div>
-                                </div>
-    
-                                <div class="farm-controls">
-                                    <h3>Farm Controls</h3>
-                                    <div class="farm-buttons">
-                                        <button class="farm-btn start">Start All Farms</button>
-                                        <button class="farm-btn stop">Stop All Farms</button>
-                                        <button class="farm-btn pause">Pause Farming</button>
-                                        <button class="farm-btn config">Configure Farms</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="license-tab" class="tab-content">
-                            <h2>License Management</h2>
-                            <div class="license-info">
-                                <div class="license-card">
-                                    <h3>Current License</h3>
-                                    <div class="license-details">
-                                        <div class="license-type">Premium Pro License</div>
-                                        <div class="license-key">PRO-2024-7F4A-92B8-E156-XYZQ</div>
-                                        <div class="license-expiry">Expires: December 31, 2024</div>
-                                        <div class="license-status active">Status: Active</div>
-                                    </div>
-                                </div>
-    
-                                <div class="license-actions">
-                                    <h3>License Actions</h3>
-                                    <div class="license-buttons">
-                                        <button class="license-btn">Validate License</button>
-                                        <button class="license-btn">Renew License</button>
-                                        <button class="license-btn">Transfer License</button>
-                                        <button class="license-btn">View History</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="tools-tab" class="tab-content">
-                            <h2>Development Tools</h2>
-                            <div class="tools-grid">
-                                <div class="tool-category">
-                                    <h3>Debug Tools</h3>
-                                    <div class="tool-buttons">
-                                        <button class="tool-btn">Network Monitor</button>
-                                        <button class="tool-btn">Memory Profiler</button>
-                                        <button class="tool-btn">Performance Analyzer</button>
-                                        <button class="tool-btn">Console Logger</button>
-                                    </div>
-                                </div>
-    
-                                <div class="tool-category">
-                                    <h3>Utility Tools</h3>
-                                    <div class="tool-buttons">
-                                        <button class="tool-btn">Script Editor</button>
-                                        <button class="tool-btn">Packet Sniffer</button>
-                                        <button class="tool-btn">Hash Generator</button>
-                                        <button class="tool-btn">JSON Formatter</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="admin-tab" class="tab-content">
-                            <h2>Admin Commands</h2>
-                            <div class="admin-interface">
-                                <div class="command-terminal">
-                                    <h3>Command Terminal</h3>
-                                    <div class="terminal-output" id="terminal-output">
-                                        <div class="terminal-line">$ Welcome to Admin Terminal</div>
-                                        <div class="terminal-line">$ Type 'help' for available commands</div>
-                                    </div>
-                                    <div class="terminal-input">
-                                        <span class="terminal-prompt">admin@client:~$ </span>
-                                        <input type="text" id="admin-command" class="command-input" placeholder="Enter command...">
-                                    </div>
-                                </div>
-    
-                                <div class="quick-commands">
-                                    <h3>Quick Commands</h3>
-                                    <div class="command-buttons">
-                                        <button class="cmd-btn" data-cmd="status">System Status</button>
-                                        <button class="cmd-btn" data-cmd="restart">Restart Services</button>
-                                        <button class="cmd-btn" data-cmd="backup">Create Backup</button>
-                                        <button class="cmd-btn" data-cmd="clear">Clear Logs</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="callbacks-tab" class="tab-content">
-                            <h2>Callback Management</h2>
-                            <div class="callback-dashboard">
-                                <div class="callback-stats">
-                                    <h3>Callback Statistics</h3>
-                                    <div class="callback-metrics">
-                                        <div class="callback-metric">
-                                            <span class="metric-label">Active Callbacks</span>
-                                            <span class="metric-value">12</span>
-                                        </div>
-                                        <div class="callback-metric">
-                                            <span class="metric-label">Success Rate</span>
-                                            <span class="metric-value">94.7%</span>
-                                        </div>
-                                        <div class="callback-metric">
-                                            <span class="metric-label">Avg Response</span>
-                                            <span class="metric-value">147ms</span>
-                                        </div>
-                                    </div>
-                                </div>
-    
-                                <div class="callback-list">
-                                    <h3>Recent Callbacks</h3>
-                                    <div class="callback-items">
-                                        <div class="callback-item">
-                                            <span class="callback-status success"></span>
-                                            <span class="callback-url">https://api.example.com/webhook</span>
-                                            <span class="callback-time">2 min ago</span>
-                                        </div>
-                                        <div class="callback-item">
-                                            <span class="callback-status success"></span>
-                                            <span class="callback-url">https://hooks.slack.com/services/...</span>
-                                            <span class="callback-time">5 min ago</span>
-                                        </div>
-                                        <div class="callback-item">
-                                            <span class="callback-status failed"></span>
-                                            <span class="callback-url">https://discord.com/api/webhooks/...</span>
-                                            <span class="callback-time">12 min ago</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="logs-tab" class="tab-content">
-                            <h2>System Logs</h2>
-                            <div class="logs-interface">
-                                <div class="log-controls">
-                                    <select class="log-filter">
-                                        <option value="all">All Logs</option>
-                                        <option value="info">Info</option>
-                                        <option value="warning">Warning</option>
-                                        <option value="error">Error</option>
-                                    </select>
-                                    <button class="log-btn">Refresh</button>
-                                    <button class="log-btn">Clear</button>
-                                    <button class="log-btn">Export</button>
-                                </div>
-    
-                                <div class="log-viewer" id="log-viewer">
-                                    <div class="log-entry info">
-                                        <span class="log-time">15:42:18</span>
-                                        <span class="log-level info">INFO</span>
-                                        <span class="log-message">Client connected successfully</span>
-                                    </div>
-                                    <div class="log-entry warning">
-                                        <span class="log-time">15:41:55</span>
-                                        <span class="log-level warning">WARN</span>
-                                        <span class="log-message">High memory usage detected (78%)</span>
-                                    </div>
-                                    <div class="log-entry info">
-                                        <span class="log-time">15:41:32</span>
-                                        <span class="log-level info">INFO</span>
-                                        <span class="log-message">Automation script started</span>
-                                    </div>
-                                    <div class="log-entry error">
-                                        <span class="log-time">15:40:12</span>
-                                        <span class="log-level error">ERROR</span>
-                                        <span class="log-message">Failed to connect to server (timeout)</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="errors-tab" class="tab-content">
-                            <h2>Error Management</h2>
-                            <div class="error-dashboard">
-                                <div class="error-summary">
-                                    <h3>Error Summary</h3>
-                                    <div class="error-stats">
-                                        <div class="error-stat critical">
-                                            <span class="error-count">3</span>
-                                            <span class="error-label">Critical</span>
-                                        </div>
-                                        <div class="error-stat high">
-                                            <span class="error-count">7</span>
-                                            <span class="error-label">High</span>
-                                        </div>
-                                        <div class="error-stat medium">
-                                            <span class="error-count">12</span>
-                                            <span class="error-label">Medium</span>
-                                        </div>
-                                        <div class="error-stat low">
-                                            <span class="error-count">25</span>
-                                            <span class="error-label">Low</span>
-                                        </div>
-                                    </div>
-                                </div>
-    
-                                <div class="error-list">
-                                    <h3>Recent Errors</h3>
-                                    <div class="error-items">
-                                        <div class="error-item critical">
-                                            <span class="error-severity">CRITICAL</span>
-                                            <span class="error-desc">Database connection lost</span>
-                                            <span class="error-time">3 min ago</span>
-                                        </div>
-                                        <div class="error-item high">
-                                            <span class="error-severity">HIGH</span>
-                                            <span class="error-desc">Memory leak detected in module</span>
-                                            <span class="error-time">8 min ago</span>
-                                        </div>
-                                        <div class="error-item medium">
-                                            <span class="error-severity">MEDIUM</span>
-                                            <span class="error-desc">API rate limit exceeded</span>
-                                            <span class="error-time">15 min ago</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-    
-                        <div id="cheats-tab" class="tab-content">
-                            <h2>Cheat Engine</h2>
-                            <div class="cheats-warning">
-                                ⚠️ Use these features responsibly
-                            </div>
-                            <div class="cheats-grid">
-                                <div class="cheat-category">
-                                    <h3>Score Cheats</h3>
-                                    <button class="cheat-btn">Max Score</button>
-                                    <button class="cheat-btn">Add 1000 Points</button>
-                                    <button class="cheat-btn">Infinite Coins</button>
-                                </div>
-    
-                                <div class="cheat-category">
-                                    <h3>Game Cheats</h3>
-                                    <button class="cheat-btn">Skip to End</button>
-                                    <button class="cheat-btn">Reveal Answers</button>
-                                    <button class="cheat-btn">Time Freeze</button>
-                                </div>
-                            </div>
-                        </div><div class="system-panel">
-                                    <h3>System Resources</h3>
-                                    <div class="resource-monitors">
-                                        <div class="resource-item">
-                                            <span class="resource-label">CPU Usage</span>
-                                            <div class="resource-bar">
-                                                <div class="resource-fill" style="width: 34%"></div>
-                                            </div>
-                                            <span class="resource-value">34%</span>
-                                        </div>
-                                        <div class="resource-item">
-                                            <span class="resource-label">Memory</span>
-                                            <div class="resource-bar">
-                                                <div class="resource-fill" style="width: 67%"></div>
-                                            </div>
-                                            <span class="resource-value">67%</span>
-                                        </div>
-                                        <div class="resource-item">
-                                            <span class="resource-label">Disk I/O</span>
-                                            <div class="resource-bar">
-                                                <div class="resource-fill" style="width: 23%"></div>
-                                            </div>
-                                            <span class="resource-value">23%</span>
-                                        </div>
-                                    </div>
-                                </div>
-    
-                                <div class="system-panel">
-                                    <h3>System Details</h3>
-                                    <div class="system-info">
-                                        <div class="info-row">
-                                            <span class="info-label">OS:</span>
-                                            <span class="info-value">Windows 11 Pro</span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Browser:</span>
-                                            <span class="info-value">Chrome 115.0.5790</span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">RAM:</span>
-                                            <span class="info-value">16GB DDR4</span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="info-label">Uptime:</span>
-                                            <span class="info-value">2d 14h 32m</span>
-                                        </div>
+                                    <div class="info-row">
+                                        <span class="info-label">Uptime:</span>
+                                        <span class="info-value">2d 14h 32m</span>
                                     </div>
                                 </div>
                             </div>
@@ -6590,1633 +7022,1631 @@ javascript:(()=>{
                     </div>
                 </div>
             </div>
-        `;
-    
-        // Add enhanced CSS styles
-        const styles = `
-            <style>
+        </div>
+    `;
+
+    // Add enhanced CSS styles
+    const styles = `
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #ccc;
+        }
+        
+        /* NEW: Styles for the toggle button */
+        #toggle-ui-btn {
+            position: fixed;
+            top: 0;
+            left: 50%; /* Center the button horizontally */
+            transform: translateX(-50%);
+            z-index: 1000000;
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+            color: white;
+            border: 2px solid #8b5cf6;
+            padding: 8px 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        #toggle-ui-btn:hover {
+            background: linear-gradient(90deg, #a855f7, #c464fa);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .arrow-icon {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        
+        #toggle-ui-btn.closed .arrow-icon {
+            transform: rotate(180deg);
+        }
+
+        #blooket-client-ui {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 800px;
+            height: 600px;
+            z-index: 999999;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            /* NEW: Add transition and initial state */
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        /* NEW: Class to hide the UI */
+        #blooket-client-ui.ui-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-100px);
+        }
+        
+        #blooket-client-ui.fullscreen {
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed !important;
+            z-index: 999999 !important;
+        }
+
+        #blooket-client-ui.fullscreen #client-window {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+        }
+        
+        #client-window {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #1a1a1a 0%, #2d1b4e 50%, #1a1a1a 100%);
+            border: 2px solid #8b5cf6;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #client-header {
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            flex-shrink: 0;
+        }
+        
+        #client-title {
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #client-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        #client-controls button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        
+        #minimize-btn {
+            background: linear-gradient(145deg, #fbbf24, #f59e0b);
+        }
+        
+        #minimize-btn:hover {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            transform: scale(1.1);
+        }
+        
+        #fullscreen-btn {
+            background: linear-gradient(145deg, #10b981, #059669);
+        }
+        
+        #fullscreen-btn:hover {
+            background: linear-gradient(145deg, #059669, #047857);
+            transform: scale(1.1);
+        }
+        
+        #close-btn {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+        }
+        
+        #close-btn:hover {
+            background: linear-gradient(145deg, #dc2626, #b91c1c);
+            transform: scale(1.1);
+        }
+        
+        #client-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        #sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #2a2a2a 0%, #3d2a5a 100%);
+            border-right: 2px solid #8b5cf6;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        #sidebar.sidebar-closed {
+            width: 60px;
+        }
+        
+        #sidebar.sidebar-locked {
+            border-right-color: #10b981;
+        }
+        
+        #sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        
+        #sidebar-toggle, #sidebar-lock {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid #8b5cf6;
+            color: #8b5cf6;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        
+        #sidebar-toggle:hover, #sidebar-lock:hover {
+            background: rgba(139, 92, 246, 0.3);
+            transform: scale(1.05);
+        }
+        
+        #sidebar-tabs {
+            flex: 1;
+            padding: 10px 0;
+            overflow-y: auto;
+        }
+        
+        .sidebar-tab {
+            width: 100%;
+            padding: 15px 20px;
+            background: transparent;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            font-size: 14px;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-tab:hover {
+            background: rgba(139, 92, 246, 0.2);
+            color: white;
+            border-left-color: rgba(139, 92, 246, 0.5);
+        }
+        
+        .sidebar-tab.active {
+            background: rgba(139, 92, 246, 0.3);
+            color: #8b5cf6;
+            border-left-color: #8b5cf6;
+        }
+        
+        .tab-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        .tab-label {
+            transition: opacity 0.3s;
+        }
+        
+        #sidebar.sidebar-closed .tab-label {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+        
+        #client-content {
+            flex: 1;
+            padding: 25px;
+            background: linear-gradient(180deg, #1a1a1a 0%, #2a1a3a 100%);
+            overflow-y: auto;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            height: 100%;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-content h2 {
+            color: #8b5cf6;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 20px;
+            height: calc(100% - 60px);
+        }
+        
+        .feature-card {
+            background: linear-gradient(145deg, #2a2a2a, #3a2a4a);
+            border: 1px solid #8b5cf6;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-card.large {
+            grid-row: 1 / 3;
+        }
+        
+        .feature-card h3 {
+            color: #a855f7;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .stat-item {
+            background: rgba(139, 92, 246, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            display: block;
+            color: #ccc;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            display: block;
+            color: #8b5cf6;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .action-btn.primary {
+            background: linear-gradient(145deg, #8b5cf6, #a855f7);
+            color: white;
+        }
+        
+        .action-btn.secondary {
+            background: linear-gradient(145deg, #6b7280, #4b5563);
+            color: white;
+        }
+        
+        .action-btn.success {
+            background: linear-gradient(145deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .action-btn.danger {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-indicators {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .status-dot.active {
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+        
+        .status-dot.inactive {
+            background: #6b7280;
+        }
+        
+        .status-dot.warning {
+            background: #f59e0b;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            height: calc(100% - 60px);
+        }
+        
+        .control-panel {
+            background: rgba(42, 42, 42, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .control-panel h3 {
+            color: #a855f7;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #ccc;
+            font-size: 14px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .control-label input[type="checkbox"] {
+            opacity: 0;
+            position: absolute;
+        }
+        
+        .checkmark {
+            width: 20px;
+            height: 20px;
+            background: #2a2a2a;
+            border: 2px solid #8b5cf6;
+            border-radius: 4px;
+            margin-right: 12px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .control-label input[type="checkbox"]:checked + .checkmark {
+            background: #8b5cf6;
+        }
+        
+        .control-label input[type="checkbox"]:checked + .checkmark::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .slider-group {
+            margin-bottom: 20px;
+        }
+        
+        .slider-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: #2a2a2a;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            color: #8b5cf6;
+            font-weight: bold;
+            float: right;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .control-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .control-btn.start {
+            background: linear-gradient(145deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .control-btn.stop {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .control-btn.pause {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .control-btn.resume {
+            background: linear-gradient(145deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        
+        .control-btn.restart {
+            background: linear-gradient(145deg, #8b5cf6, #a855f7);
+            color: white;
+        }
+        
+        .control-btn.emergency {
+            background: linear-gradient(145deg, #7c2d12, #991b1b);
+            color: white;
+        }
+        
+        .automation-panels, .cheats-grid {
+            display: grid;
+            gap: 25px;
+        }
+        
+        .auto-panel, .cheat-category {
+            background: rgba(42, 42, 42, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .auto-panel h3, .cheat-category h3 {
+            color: #a855f7;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .auto-options, .auto-btn, .cheat-btn {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .auto-btn, .cheat-btn {
+            background: linear-gradient(145deg, #8b5cf6, #a855f7);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .auto-btn:hover, .cheat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+        }
+        
+        .cheats-warning {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-item {
+            background: rgba(139, 92, 246, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            color: #ccc;
+        }
+        
+        .features-list ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .server-panels, .data-dashboard, .firmware-sections, .database-grid, 
+        .client-config, .farm-dashboard, .license-info, .tools-grid, 
+        .admin-interface, .callback-dashboard, .logs-interface, 
+        .error-dashboard, .system-grid {
+            display: grid;
+            gap: 20px;
+            height: calc(100% - 60px);
+        }
+        
+        .server-panels {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .server-panel, .data-card, .firmware-panel, .db-panel, 
+        .config-section, .farm-stats, .farm-controls, .license-card, 
+        .license-actions, .tool-category, .command-terminal, 
+        .quick-commands, .callback-stats, .callback-list, 
+        .log-controls, .error-summary, .error-list, .system-panel {
+            background: rgba(42, 42, 42, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .server-list, .server-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .server-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .server-dot.online {
+            background: #10b981;
+            box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+        }
+        
+        .server-dot.offline {
+            background: #ef4444;
+        }
+        
+        .server-name {
+            flex: 1;
+            color: #ccc;
+        }
+        
+        .server-ping {
+            color: #8b5cf6;
+            font-weight: bold;
+        }
+        
+        .server-btn, .data-btn, .firmware-btn, .db-btn, .client-btn, 
+        .farm-btn, .license-btn, .tool-btn, .cmd-btn, .log-btn {
+            background: linear-gradient(145deg, #8b5cf6, #a855f7);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+        
+        .server-btn:hover, .data-btn:hover, .firmware-btn:hover, 
+        .db-btn:hover, .client-btn:hover, .farm-btn:hover, 
+        .license-btn:hover, .tool-btn:hover, .cmd-btn:hover, .log-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+        }
+        
+        .connection-settings, .data-metrics, .db-stats, .client-info, 
+        .client-settings, .farm-metrics, .license-details {
+            margin-top: 15px;
+        }
+        
+        .server-input, .command-input {
+            width: 100%;
+            background: rgba(42, 42, 42, 0.8);
+            border: 1px solid #8b5cf6;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+        }
+        
+        .server-input::placeholder, .command-input::placeholder {
+            color: #666;
+        }
+        
+        .input-group {
+            margin-top: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #ccc;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .data-metrics, .farm-metrics, .callback-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        
+        .metric, .farm-metric, .callback-metric {
+            text-align: center;
+            background: rgba(139, 92, 246, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .metric-label, .metric-value {
+            display: block;
+            color: #ccc;
+        }
+        
+        .metric-value {
+            color: #8b5cf6;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        .metric-icon {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .chart-placeholder {
+            background: rgba(139, 92, 246, 0.1);
+            border: 2px dashed #8b5cf6;
+            padding: 40px;
+            text-align: center;
+            color: #8b5cf6;
+            font-size: 18px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .version-display {
+            background: rgba(139, 92, 246, 0.2);
+            color: #8b5cf6;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .version-date, .version-status {
+            color: #ccc;
+            margin: 5px 0;
+        }
+        
+        .update-progress {
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            background: rgba(42, 42, 42, 0.8);
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            color: #ccc;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .firmware-btn.primary {
+            background: linear-gradient(145deg, #10b981, #059669);
+        }
+        
+        .firmware-btn.secondary {
+            background: linear-gradient(145deg, #6b7280, #4b5563);
+        }
+        
+        .firmware-btn.danger {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+        }
+        
+        .db-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .db-stat {
+            text-align: center;
+            background: rgba(139, 92, 246, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .db-operations {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #ccc;
+            font-weight: 600;
+        }
+        
+        .info-value {
+            color: #8b5cf6;
+            font-family: monospace;
+        }
+        
+        .license-type {
+            background: linear-gradient(145deg, #8b5cf6, #a855f7);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .license-key {
+            background: rgba(42, 42, 42, 0.8);
+            color: #10b981;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .license-expiry, .license-status {
+            margin: 8px 0;
+            color: #ccc;
+        }
+        
+        .license-status.active {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .license-buttons, .tool-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .farm-buttons, .command-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .farm-btn.start {
+            background: linear-gradient(145deg, #10b981, #059669);
+        }
+        
+        .farm-btn.stop {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+        }
+        
+        .farm-btn.pause {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+        }
+        
+        .farm-btn.config {
+            background: linear-gradient(145deg, #6b7280, #4b5563);
+        }
+        
+        .terminal-output {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+        
+        .terminal-line {
+            color: #10b981;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .terminal-input {
+            display: flex;
+            align-items: center;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        
+        .terminal-prompt {
+            color: #8b5cf6;
+            font-family: monospace;
+            margin-right: 10px;
+        }
+        
+        .command-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: monospace;
+            outline: none;
+        }
+        
+        .callback-items, .error-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .callback-item, .error-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 6px;
+            gap: 15px;
+        }
+        
+        .callback-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .callback-status.success {
+            background: #10b981;
+        }
+        
+        .callback-status.failed {
+            background: #ef4444;
+        }
+        
+        .callback-url {
+            flex: 1;
+            color: #ccc;
+            font-family: monospace;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .callback-time {
+            color: #8b5cf6;
+            font-size: 12px;
+        }
+        
+        .log-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .log-filter {
+            background: rgba(42, 42, 42, 0.8);
+            border: 1px solid #8b5cf6;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+        
+        .log-viewer {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        
+        .log-entry {
+            display: flex;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+            background: rgba(42, 42, 42, 0.3);
+        }
+        
+        .log-time {
+            color: #666;
+            margin-right: 15px;
+            min-width: 80px;
+        }
+        
+        .log-level {
+            margin-right: 15px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .log-level.info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+        
+        .log-level.warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+        
+        .log-level.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        
+        .log-message {
+            color: #ccc;
+            flex: 1;
+        }
+        
+        .error-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        
+        .error-stat {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .error-stat.critical {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+        }
+        
+        .error-stat.high {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+        }
+        
+        .error-stat.medium {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+        }
+        
+        .error-stat.low {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid #8b5cf6;
+        }
+        
+        .error-count {
+            display: block;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .error-label {
+            display: block;
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+        
+        .error-severity {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .error-item.critical .error-severity {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .error-item.high .error-severity {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .error-item.medium .error-severity {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .error-desc {
+            flex: 1;
+            color: #ccc;
+            margin: 0 15px;
+        }
+        
+        .error-time {
+            color: #8b5cf6;
+            font-size: 12px;
+        }
+        
+        .system-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .resource-monitors {
+            margin-top: 15px;
+        }
+        
+        .resource-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        
+        .resource-label {
+            color: #ccc;
+            min-width: 80px;
+            font-size: 14px;
+        }
+        
+        .resource-bar {
+            flex: 1;
+            height: 12px;
+            background: rgba(42, 42, 42, 0.8);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .resource-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b5cf6, #a855f7);
+            transition: width 0.3s ease;
+        }
+        
+        .resource-value {
+            color: #8b5cf6;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Scrollbar styling */
+        #client-content::-webkit-scrollbar, #sidebar-tabs::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #client-content::-webkit-scrollbar-track, #sidebar-tabs::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+        
+        #client-content::-webkit-scrollbar-thumb, #sidebar-tabs::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 4px;
+        }
+        
+        #client-content::-webkit-scrollbar-thumb:hover, #sidebar-tabs::-webkit-scrollbar-thumb:hover {
+            background: #a855f7;
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .status-dot.active {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1000px) {
             #blooket-client-ui {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                width: 800px;
-                height: 600px;
-                z-index: 999999;
-                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                user-select: none;
-                transition: all 0.3s ease;
+                width: 90vw;
+                height: 80vh;
             }
-    
-            #blooket-client-ui.fullscreen {
-                top: 0 !important;
-                left: 0 !important;
-                right: 0 !important;
-                bottom: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                position: fixed !important;
-                z-index: 999999 !important;
-            }
-    
-            #blooket-client-ui.fullscreen #client-window {
-                width: 100% !important;
-                height: 100% !important;
-                border-radius: 0 !important;
-            }
-    
-            #client-window {
-                width: 100%;
-                height: 100%;
-                background: linear-gradient(145deg, #1a1a1a 0%, #2d1b4e 50%, #1a1a1a 100%);
-                border: 2px solid #8b5cf6;
-                border-radius: 12px;
-                box-shadow: 0 20px 40px rgba(139, 92, 246, 0.4);
-                overflow: hidden;
-                backdrop-filter: blur(15px);
-                display: flex;
-                flex-direction: column;
-            }
-    
-            #client-header {
-                background: linear-gradient(90deg, #8b5cf6, #a855f7);
-                padding: 12px 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                cursor: move;
-                flex-shrink: 0;
-            }
-    
-            #client-title {
-                color: white;
-                font-weight: bold;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-    
-            #client-controls {
-                display: flex;
-                gap: 8px;
-            }
-    
-            #client-controls button {
-                width: 28px;
-                height: 28px;
-                border: none;
-                border-radius: 6px;
-                color: white;
-                cursor: pointer;
-                font-size: 16px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.2s;
-                font-weight: bold;
-            }
-    
-            #minimize-btn {
-                background: linear-gradient(145deg, #fbbf24, #f59e0b);
-            }
-    
-            #minimize-btn:hover {
-                background: linear-gradient(145deg, #f59e0b, #d97706);
-                transform: scale(1.1);
-            }
-    
-            #fullscreen-btn {
-                background: linear-gradient(145deg, #10b981, #059669);
-            }
-    
-            #fullscreen-btn:hover {
-                background: linear-gradient(145deg, #059669, #047857);
-                transform: scale(1.1);
-            }
-    
-            #close-btn {
-                background: linear-gradient(145deg, #ef4444, #dc2626);
-            }
-    
-            #close-btn:hover {
-                background: linear-gradient(145deg, #dc2626, #b91c1c);
-                transform: scale(1.1);
-            }
-    
-            #client-body {
-                display: flex;
-                flex: 1;
-                overflow: hidden;
-            }
-    
-            #sidebar {
-                width: 250px;
-                background: linear-gradient(180deg, #2a2a2a 0%, #3d2a5a 100%);
-                border-right: 2px solid #8b5cf6;
-                transition: all 0.3s ease;
-                display: flex;
-                flex-direction: column;
-                flex-shrink: 0;
-            }
-    
-            #sidebar.sidebar-closed {
-                width: 60px;
-            }
-    
-            #sidebar.sidebar-locked {
-                border-right-color: #10b981;
-            }
-    
-            #sidebar-header {
-                padding: 15px;
-                border-bottom: 1px solid rgba(139, 92, 246, 0.3);
-                display: flex;
-                gap: 10px;
-                flex-shrink: 0;
-            }
-    
-            #sidebar-toggle, #sidebar-lock {
-                background: rgba(139, 92, 246, 0.2);
-                border: 1px solid #8b5cf6;
-                color: #8b5cf6;
-                padding: 8px;
-                border-radius: 6px;
-                cursor: pointer;
-                transition: all 0.2s;
-                font-size: 14px;
-            }
-    
-            #sidebar-toggle:hover, #sidebar-lock:hover {
-                background: rgba(139, 92, 246, 0.3);
-                transform: scale(1.05);
-            }
-    
-            #sidebar-lock.locked {
-                background: rgba(16, 185, 129, 0.2);
-                border-color: #10b981;
-                color: #10b981;
-            }
-    
-            #sidebar-tabs {
-                flex: 1;
-                padding: 10px 0;
-                overflow-y: auto;
-            }
-    
-            .sidebar-tab {
-                width: 100%;
-                padding: 15px 20px;
-                background: transparent;
-                border: none;
-                color: #ccc;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                text-align: left;
-                font-size: 14px;
-                border-left: 3px solid transparent;
-            }
-    
-            .sidebar-tab:hover {
-                background: rgba(139, 92, 246, 0.2);
-                color: white;
-                border-left-color: rgba(139, 92, 246, 0.5);
-            }
-    
-            .sidebar-tab.active {
-                background: rgba(139, 92, 246, 0.3);
-                color: #8b5cf6;
-                border-left-color: #8b5cf6;
-            }
-    
-            .tab-icon {
-                font-size: 16px;
-                flex-shrink: 0;
-            }
-    
-            .tab-label {
-                transition: opacity 0.3s;
-            }
-    
-            #sidebar.sidebar-closed .tab-label {
-                opacity: 0;
-                width: 0;
-                overflow: hidden;
-            }
-    
-            #client-content {
-                flex: 1;
-                padding: 25px;
-                background: linear-gradient(180deg, #1a1a1a 0%, #2a1a3a 100%);
-                overflow-y: auto;
-                color: white;
-            }
-    
-            .tab-content {
-                display: none;
-                height: 100%;
-            }
-    
-            .tab-content.active {
-                display: block;
-            }
-    
-            .tab-content h2 {
-                color: #8b5cf6;
-                margin-top: 0;
-                margin-bottom: 25px;
-                font-size: 24px;
-                font-weight: 600;
-            }
-    
+            
             .dashboard-grid {
-                display: grid;
-                grid-template-columns: 2fr 1fr 1fr;
-                gap: 20px;
-                height: calc(100% - 60px);
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
             }
-    
-            .feature-card {
-                background: linear-gradient(145deg, #2a2a2a, #3a2a4a);
-                border: 1px solid #8b5cf6;
-                border-radius: 12px;
-                padding: 20px;
-                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            }
-    
+            
             .feature-card.large {
-                grid-row: 1 / 3;
-            }
-    
-            .feature-card h3 {
-                color: #a855f7;
-                margin: 0 0 15px 0;
-                font-size: 18px;
-                font-weight: 600;
-            }
-    
-            .stats-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-            }
-    
-            .stat-item {
-                background: rgba(139, 92, 246, 0.1);
-                padding: 15px;
-                border-radius: 8px;
-                text-align: center;
-            }
-    
-            .stat-label {
-                display: block;
-                color: #ccc;
-                font-size: 12px;
-                margin-bottom: 5px;
-            }
-    
-            .stat-value {
-                display: block;
-                color: #8b5cf6;
-                font-size: 24px;
-                font-weight: bold;
-            }
-    
-            .action-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-    
-            .action-btn {
-                padding: 12px 16px;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 600;
-                transition: all 0.3s;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-    
-            .action-btn.primary {
-                background: linear-gradient(145deg, #8b5cf6, #a855f7);
-                color: white;
-            }
-    
-            .action-btn.secondary {
-                background: linear-gradient(145deg, #6b7280, #4b5563);
-                color: white;
-            }
-    
-            .action-btn.success {
-                background: linear-gradient(145deg, #10b981, #059669);
-                color: white;
-            }
-    
-            .action-btn.danger {
-                background: linear-gradient(145deg, #ef4444, #dc2626);
-                color: white;
-            }
-    
-            .action-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-            }
-    
-            .status-indicators {
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-    
-            .status-item {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                font-size: 14px;
-                color: #ccc;
-            }
-    
-            .status-dot {
-                width: 12px;
-                height: 12px;
-                border-radius: 50%;
-                flex-shrink: 0;
-            }
-    
-            .status-dot.active {
-                background: #10b981;
-                box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
-            }
-    
-            .status-dot.inactive {
-                background: #6b7280;
-            }
-    
-            .status-dot.warning {
-                background: #f59e0b;
-                box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
-            }
-    
-            .controls-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 25px;
-                height: calc(100% - 60px);
-            }
-    
-            .control-panel {
-                background: rgba(42, 42, 42, 0.5);
-                border: 1px solid rgba(139, 92, 246, 0.3);
-                border-radius: 12px;
-                padding: 20px;
-            }
-    
-            .control-panel h3 {
-                color: #a855f7;
-                margin-top: 0;
-                margin-bottom: 20px;
-                font-size: 18px;
-            }
-    
-            .control-group {
-                margin-bottom: 25px;
-            }
-    
-            .control-label {
-                display: flex;
-                align-items: center;
-                margin-bottom: 15px;
-                color: #ccc;
-                font-size: 14px;
-                cursor: pointer;
-                position: relative;
-            }
-    
-            .control-label input[type="checkbox"] {
-                opacity: 0;
-                position: absolute;
-            }
-    
-            .checkmark {
-                width: 20px;
-                height: 20px;
-                background: #2a2a2a;
-                border: 2px solid #8b5cf6;
-                border-radius: 4px;
-                margin-right: 12px;
-                position: relative;
-                transition: all 0.2s;
-            }
-    
-            .control-label input[type="checkbox"]:checked + .checkmark {
-                background: #8b5cf6;
-            }
-    
-            .control-label input[type="checkbox"]:checked + .checkmark::after {
-                content: '✓';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: white;
-                font-size: 14px;
-                font-weight: bold;
-            }
-    
-            .slider-group {
-                margin-bottom: 20px;
-            }
-    
-            .slider-group label {
-                display: block;
-                color: #ccc;
-                margin-bottom: 8px;
-                font-size: 14px;
-            }
-    
-            .slider-group input[type="range"] {
-                width: 100%;
-                height: 6px;
-                background: #2a2a2a;
-                border-radius: 3px;
-                outline: none;
-                -webkit-appearance: none;
-            }
-    
-            .slider-group input[type="range"]::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                width: 20px;
-                height: 20px;
-                background: #8b5cf6;
-                border-radius: 50%;
-                cursor: pointer;
-            }
-    
-            .slider-value {
-                color: #8b5cf6;
-                font-weight: bold;
-                float: right;
-            }
-    
-            .button-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-            }
-    
-            .control-btn {
-                padding: 12px 16px;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 600;
-                transition: all 0.3s;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-    
-            .control-btn.start {
-                background: linear-gradient(145deg, #10b981, #059669);
-                color: white;
-            }
-    
-            .control-btn.stop {
-                background: linear-gradient(145deg, #ef4444, #dc2626);
-                color: white;
-            }
-    
-            .control-btn.pause {
-                background: linear-gradient(145deg, #f59e0b, #d97706);
-                color: white;
-            }
-    
-            .control-btn.resume {
-                background: linear-gradient(145deg, #3b82f6, #2563eb);
-                color: white;
-            }
-    
-            .control-btn.restart {
-                background: linear-gradient(145deg, #8b5cf6, #a855f7);
-                color: white;
-            }
-    
-            .control-btn.emergency {
-                background: linear-gradient(145deg, #7c2d12, #991b1b);
-                color: white;
-            }
-    
-            .automation-panels, .cheats-grid {
-                display: grid;
-                gap: 25px;
-            }
-    
-            .auto-panel, .cheat-category {
-                background: rgba(42, 42, 42, 0.5);
-                border: 1px solid rgba(139, 92, 246, 0.3);
-                border-radius: 12px;
-                padding: 20px;
-            }
-    
-            .auto-panel h3, .cheat-category h3 {
-                color: #a855f7;
-                margin-top: 0;
-                margin-bottom: 15px;
-            }
-    
-            .auto-options, .auto-btn, .cheat-btn {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
-    
-            .auto-btn, .cheat-btn {
-                background: linear-gradient(145deg, #8b5cf6, #a855f7);
-                color: white;
-                border: none;
-                padding: 12px 16px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 600;
-                transition: all 0.3s;
-            }
-    
-            .auto-btn:hover, .cheat-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-            }
-    
-            .cheats-warning {
-                background: rgba(245, 158, 11, 0.2);
-                border: 1px solid #f59e0b;
-                color: #fbbf24;
-                padding: 12px;
-                border-radius: 8px;
-                margin-bottom: 20px;
-                text-align: center;
-                font-weight: 600;
-            }
-    
-            .info-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 15px;
-                margin-bottom: 20px;
-            }
-    
-            .info-item {
-                background: rgba(139, 92, 246, 0.1);
-                padding: 12px;
-                border-radius: 8px;
-                color: #ccc;
-            }
-    
-            .features-list ul {
-                list-style: none;
-                padding: 0;
-            }
-    
-            /* New tab styling */
-            .server-panels, .data-dashboard, .firmware-sections, .database-grid, 
-            .client-config, .farm-dashboard, .license-info, .tools-grid, 
-            .admin-interface, .callback-dashboard, .logs-interface, 
-            .error-dashboard, .system-grid {
-                display: grid;
-                gap: 20px;
-                height: calc(100% - 60px);
-            }
-    
-            .server-panels {
-                grid-template-columns: 1fr 1fr;
-            }
-    
-            .server-panel, .data-card, .firmware-panel, .db-panel, 
-            .config-section, .farm-stats, .farm-controls, .license-card, 
-            .license-actions, .tool-category, .command-terminal, 
-            .quick-commands, .callback-stats, .callback-list, 
-            .log-controls, .error-summary, .error-list, .system-panel {
-                background: rgba(42, 42, 42, 0.5);
-                border: 1px solid rgba(139, 92, 246, 0.3);
-                border-radius: 12px;
-                padding: 20px;
-            }
-    
-            .server-list, .server-item {
-                display: flex;
-                align-items: center;
-                margin-bottom: 10px;
-            }
-    
-            .server-dot {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                margin-right: 10px;
-            }
-    
-            .server-dot.online {
-                background: #10b981;
-                box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
-            }
-    
-            .server-dot.offline {
-                background: #ef4444;
-            }
-    
-            .server-name {
-                flex: 1;
-                color: #ccc;
-            }
-    
-            .server-ping {
-                color: #8b5cf6;
-                font-weight: bold;
-            }
-    
-            .server-btn, .data-btn, .firmware-btn, .db-btn, .client-btn, 
-            .farm-btn, .license-btn, .tool-btn, .cmd-btn, .log-btn {
-                background: linear-gradient(145deg, #8b5cf6, #a855f7);
-                color: white;
-                border: none;
-                padding: 10px 16px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 600;
-                transition: all 0.3s;
-                margin: 5px;
-            }
-    
-            .server-btn:hover, .data-btn:hover, .firmware-btn:hover, 
-            .db-btn:hover, .client-btn:hover, .farm-btn:hover, 
-            .license-btn:hover, .tool-btn:hover, .cmd-btn:hover, .log-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-            }
-    
-            .connection-settings, .data-metrics, .db-stats, .client-info, 
-            .client-settings, .farm-metrics, .license-details {
-                margin-top: 15px;
-            }
-    
-            .server-input, .command-input {
-                width: 100%;
-                background: rgba(42, 42, 42, 0.8);
-                border: 1px solid #8b5cf6;
-                color: white;
-                padding: 10px;
-                border-radius: 6px;
-                margin-top: 8px;
-            }
-    
-            .server-input::placeholder, .command-input::placeholder {
-                color: #666;
-            }
-    
-            .input-group {
-                margin-top: 15px;
-            }
-    
-            .input-group label {
-                display: block;
-                color: #ccc;
-                margin-bottom: 5px;
-                font-size: 14px;
-            }
-    
-            .data-metrics, .farm-metrics, .callback-metrics {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-                gap: 15px;
-            }
-    
-            .metric, .farm-metric, .callback-metric {
-                text-align: center;
-                background: rgba(139, 92, 246, 0.1);
-                padding: 15px;
-                border-radius: 8px;
-            }
-    
-            .metric-label, .metric-value {
-                display: block;
-                color: #ccc;
-            }
-    
-            .metric-value {
-                color: #8b5cf6;
-                font-size: 20px;
-                font-weight: bold;
-                margin-top: 5px;
-            }
-    
-            .metric-icon {
-                font-size: 24px;
-                display: block;
-                margin-bottom: 8px;
-            }
-    
-            .chart-placeholder {
-                background: rgba(139, 92, 246, 0.1);
-                border: 2px dashed #8b5cf6;
-                padding: 40px;
-                text-align: center;
-                color: #8b5cf6;
-                font-size: 18px;
-                border-radius: 8px;
-                margin-bottom: 15px;
-            }
-    
-            .version-display {
-                background: rgba(139, 92, 246, 0.2);
-                color: #8b5cf6;
-                padding: 15px;
-                border-radius: 8px;
-                font-size: 24px;
-                font-weight: bold;
-                text-align: center;
-                margin-bottom: 10px;
-            }
-    
-            .version-date, .version-status {
-                color: #ccc;
-                margin: 5px 0;
-            }
-    
-            .update-progress {
-                margin-top: 20px;
-            }
-    
-            .progress-bar {
-                background: rgba(42, 42, 42, 0.8);
-                height: 20px;
-                border-radius: 10px;
-                overflow: hidden;
-                margin-bottom: 10px;
-            }
-    
-            .progress-fill {
-                height: 100%;
-                background: linear-gradient(90deg, #8b5cf6, #a855f7);
-                transition: width 0.3s ease;
-            }
-    
-            .progress-text {
-                color: #ccc;
-                text-align: center;
-                font-size: 14px;
-            }
-    
-            .firmware-btn.primary {
-                background: linear-gradient(145deg, #10b981, #059669);
-            }
-    
-            .firmware-btn.secondary {
-                background: linear-gradient(145deg, #6b7280, #4b5563);
-            }
-    
-            .firmware-btn.danger {
-                background: linear-gradient(145deg, #ef4444, #dc2626);
-            }
-    
-            .db-stats {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 15px;
-            }
-    
-            .db-stat {
-                text-align: center;
-                background: rgba(139, 92, 246, 0.1);
-                padding: 15px;
-                border-radius: 8px;
-            }
-    
-            .db-operations {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-    
-            .info-row {
-                display: flex;
-                justify-content: space-between;
-                margin: 10px 0;
-                padding: 8px 0;
-                border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-            }
-    
-            .info-row:last-child {
-                border-bottom: none;
-            }
-    
-            .info-label {
-                color: #ccc;
-                font-weight: 600;
-            }
-    
-            .info-value {
-                color: #8b5cf6;
-                font-family: monospace;
-            }
-    
-            .license-type {
-                background: linear-gradient(145deg, #8b5cf6, #a855f7);
-                color: white;
-                padding: 10px;
-                border-radius: 8px;
-                text-align: center;
-                font-weight: bold;
-                margin-bottom: 15px;
-            }
-    
-            .license-key {
-                background: rgba(42, 42, 42, 0.8);
-                color: #10b981;
-                padding: 10px;
-                border-radius: 6px;
-                font-family: monospace;
-                font-size: 12px;
-                margin: 10px 0;
-                word-break: break-all;
-            }
-    
-            .license-expiry, .license-status {
-                margin: 8px 0;
-                color: #ccc;
-            }
-    
-            .license-status.active {
-                color: #10b981;
-                font-weight: bold;
-            }
-    
-            .license-buttons, .tool-buttons {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-    
-            .farm-buttons, .command-buttons {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-    
-            .farm-btn.start {
-                background: linear-gradient(145deg, #10b981, #059669);
-            }
-    
-            .farm-btn.stop {
-                background: linear-gradient(145deg, #ef4444, #dc2626);
-            }
-    
-            .farm-btn.pause {
-                background: linear-gradient(145deg, #f59e0b, #d97706);
-            }
-    
-            .farm-btn.config {
-                background: linear-gradient(145deg, #6b7280, #4b5563);
-            }
-    
-            .terminal-output {
-                background: #1a1a1a;
-                border: 1px solid #333;
-                border-radius: 6px;
-                padding: 15px;
-                height: 200px;
-                overflow-y: auto;
-                font-family: monospace;
-                margin-bottom: 15px;
-            }
-    
-            .terminal-line {
-                color: #10b981;
-                margin: 5px 0;
-                font-size: 14px;
-            }
-    
-            .terminal-input {
-                display: flex;
-                align-items: center;
-                background: #1a1a1a;
-                border: 1px solid #333;
-                border-radius: 6px;
-                padding: 10px;
-            }
-    
-            .terminal-prompt {
-                color: #8b5cf6;
-                font-family: monospace;
-                margin-right: 10px;
-            }
-    
-            .command-input {
-                flex: 1;
-                background: transparent;
-                border: none;
-                color: white;
-                font-family: monospace;
-                outline: none;
-            }
-    
-            .callback-items, .error-items {
-                max-height: 300px;
-                overflow-y: auto;
-            }
-    
-            .callback-item, .error-item {
-                display: flex;
-                align-items: center;
-                padding: 10px;
-                margin: 8px 0;
-                background: rgba(139, 92, 246, 0.1);
-                border-radius: 6px;
-                gap: 15px;
-            }
-    
-            .callback-status {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                flex-shrink: 0;
-            }
-    
-            .callback-status.success {
-                background: #10b981;
-            }
-    
-            .callback-status.failed {
-                background: #ef4444;
-            }
-    
-            .callback-url {
-                flex: 1;
-                color: #ccc;
-                font-family: monospace;
-                font-size: 12px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-    
-            .callback-time {
-                color: #8b5cf6;
-                font-size: 12px;
-            }
-    
-            .log-controls {
-                display: flex;
-                gap: 10px;
-                margin-bottom: 20px;
-                align-items: center;
-            }
-    
-            .log-filter {
-                background: rgba(42, 42, 42, 0.8);
-                border: 1px solid #8b5cf6;
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-            }
-    
-            .log-viewer {
-                background: #1a1a1a;
-                border: 1px solid #333;
-                border-radius: 6px;
-                padding: 15px;
-                height: 400px;
-                overflow-y: auto;
-                font-family: monospace;
-            }
-    
-            .log-entry {
-                display: flex;
-                margin: 5px 0;
-                padding: 8px;
-                border-radius: 4px;
-                background: rgba(42, 42, 42, 0.3);
-            }
-    
-            .log-time {
-                color: #666;
-                margin-right: 15px;
-                min-width: 80px;
-            }
-    
-            .log-level {
-                margin-right: 15px;
-                padding: 2px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: bold;
-                min-width: 60px;
-                text-align: center;
-            }
-    
-            .log-level.info {
-                background: rgba(59, 130, 246, 0.2);
-                color: #3b82f6;
-            }
-    
-            .log-level.warning {
-                background: rgba(245, 158, 11, 0.2);
-                color: #f59e0b;
-            }
-    
-            .log-level.error {
-                background: rgba(239, 68, 68, 0.2);
-                color: #ef4444;
-            }
-    
-            .log-message {
-                color: #ccc;
-                flex: 1;
-            }
-    
-            .error-stats {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 15px;
-            }
-    
-            .error-stat {
-                text-align: center;
-                padding: 15px;
-                border-radius: 8px;
-            }
-    
-            .error-stat.critical {
-                background: rgba(239, 68, 68, 0.2);
-                border: 1px solid #ef4444;
-            }
-    
-            .error-stat.high {
-                background: rgba(245, 158, 11, 0.2);
-                border: 1px solid #f59e0b;
-            }
-    
-            .error-stat.medium {
-                background: rgba(59, 130, 246, 0.2);
-                border: 1px solid #3b82f6;
-            }
-    
-            .error-stat.low {
-                background: rgba(139, 92, 246, 0.2);
-                border: 1px solid #8b5cf6;
-            }
-    
-            .error-count {
-                display: block;
-                font-size: 24px;
-                font-weight: bold;
-                color: white;
-            }
-    
-            .error-label {
-                display: block;
-                font-size: 12px;
-                color: #ccc;
-                margin-top: 5px;
-            }
-    
-            .error-severity {
-                padding: 4px 8px;
-                border-radius: 4px;
-                font-size: 12px;
-                font-weight: bold;
-                min-width: 80px;
-                text-align: center;
-            }
-    
-            .error-item.critical .error-severity {
-                background: #ef4444;
-                color: white;
-            }
-    
-            .error-item.high .error-severity {
-                background: #f59e0b;
-                color: white;
-            }
-    
-            .error-item.medium .error-severity {
-                background: #3b82f6;
-                color: white;
-            }
-    
-            .error-desc {
-                flex: 1;
-                color: #ccc;
-                margin: 0 15px;
-            }
-    
-            .error-time {
-                color: #8b5cf6;
-                font-size: 12px;
-            }
-    
-            .system-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-    
-            .resource-monitors {
-                margin-top: 15px;
-            }
-    
-            .resource-item {
-                display: flex;
-                align-items: center;
-                margin-bottom: 15px;
-                gap: 15px;
-            }
-    
-            .resource-label {
-                color: #ccc;
-                min-width: 80px;
-                font-size: 14px;
-            }
-    
-            .resource-bar {
-                flex: 1;
-                height: 12px;
-                background: rgba(42, 42, 42, 0.8);
-                border-radius: 6px;
-                overflow: hidden;
-            }
-    
-            .resource-fill {
-                height: 100%;
-                background: linear-gradient(90deg, #8b5cf6, #a855f7);
-                transition: width 0.3s ease;
-            }
-    
-            .resource-value {
-                color: #8b5cf6;
-                font-weight: bold;
-                min-width: 40px;
-                text-align: right;
-            }
-    
-            /* Scrollbar styling */
-            #client-content::-webkit-scrollbar, #sidebar-tabs::-webkit-scrollbar {
-                width: 8px;
-            }
-    
-            #client-content::-webkit-scrollbar-track, #sidebar-tabs::-webkit-scrollbar-track {
-                background: #2a2a2a;
-            }
-    
-            #client-content::-webkit-scrollbar-thumb, #sidebar-tabs::-webkit-scrollbar-thumb {
-                background: #8b5cf6;
-                border-radius: 4px;
-            }
-    
-            #client-content::-webkit-scrollbar-thumb:hover, #sidebar-tabs::-webkit-scrollbar-thumb:hover {
-                background: #a855f7;
-            }
-    
-            /* Animations */
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.7; }
-            }
-    
-            .status-dot.active {
-                animation: pulse 2s infinite;
-            }
-    
-            /* Responsive adjustments */
-            @media (max-width: 1000px) {
-                #blooket-client-ui {
-                    width: 90vw;
-                    height: 80vh;
-                }
-    
-                .dashboard-grid {
-                    grid-template-columns: 1fr;
-                    grid-template-rows: auto auto auto;
-                }
-    
-                .feature-card.large {
-                    grid-row: auto;
-                }
-            }
-            </style>
-        `;
-    
-        // Add styles to head
-        document.head.insertAdjacentHTML('beforeend', styles);
-    
-        // Add to page
-        document.body.appendChild(clientUI);
-    
-        // State variables
-        let isFullscreen = false;
-        let isSidebarLocked = false;
-        let sidebarOpen = true;
-    
-        // Make draggable
-        let isDragging = false;
-        let currentX;
-        let currentY;
-        let initialX;
-        let initialY;
-        let xOffset = 0;
-        let yOffset = 0;
-    
-        const header = document.getElementById('client-header');
-        const windowElement = document.getElementById('client-window'); // Renamed to avoid conflict with global window object
-    
-        header.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
-    
-        function dragStart(e) {
-            if (isFullscreen) return; // Don't allow dragging in fullscreen
-    
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-    
-            if (e.target === header || header.contains(e.target)) {
-                isDragging = true;
+                grid-row: auto;
             }
         }
+    </style>
+    `;
     
-        function drag(e) {
-            if (isDragging && !isFullscreen) {
-                e.preventDefault();
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
+    // Add styles to head
+    document.head.insertAdjacentHTML('beforeend', styles);
     
-                xOffset = currentX;
-                yOffset = currentY;
+    // Add UI to page
+    document.body.appendChild(clientUI);
     
-                clientUI.style.transform = `translate(${currentX}px, ${currentY}px)`;
-            }
+    // --- NEW: Toggle functionality ---
+    const uiContainer = document.getElementById('blooket-client-ui');
+    const toggleButton = document.getElementById('toggle-ui-btn');
+
+    toggleButton.addEventListener('click', () => {
+        uiContainer.classList.toggle('ui-hidden');
+        toggleButton.classList.toggle('closed');
+    });
+
+    // State variables
+    let isFullscreen = false;
+    let isSidebarLocked = false;
+    let sidebarOpen = true;
+
+    // Make draggable
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+
+    const header = document.getElementById('client-header');
+    const windowElement = document.getElementById('client-window');
+    
+    header.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    function dragStart(e) {
+        if (isFullscreen) return;
+        
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+
+        if (e.target === header || header.contains(e.target)) {
+            isDragging = true;
         }
-    
-        function dragEnd() {
-            initialX = currentX;
-            initialY = currentY;
-            isDragging = false;
+    }
+
+    function drag(e) {
+        if (isDragging && !isFullscreen) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+            
+            xOffset = currentX;
+            yOffset = currentY;
+
+            clientUI.style.transform = `translate(${currentX}px, ${currentY}px)`;
         }
+    }
+
+    function dragEnd() {
+        initialX = currentX;
+        initialY = currentY;
+        isDragging = false;
+    }
+
+    // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarLock = document.getElementById('sidebar-lock');
+
+    sidebarToggle.addEventListener('click', () => {
+        if (!isSidebarLocked) {
+            sidebarOpen = !sidebarOpen;
+            sidebar.classList.toggle('sidebar-closed', !sidebarOpen);
+        }
+    });
+
+    sidebarLock.addEventListener('click', () => {
+        isSidebarLocked = !isSidebarLocked;
+        sidebarLock.classList.toggle('locked', isSidebarLocked);
+        sidebarLock.textContent = isSidebarLocked ? '🔒' : '🔓';
+        sidebar.classList.toggle('sidebar-locked', isSidebarLocked);
+
+        if (isSidebarLocked && !sidebarOpen) {
+            sidebarOpen = true;
+            sidebar.classList.remove('sidebar-closed');
+        }
+    });
+
+    sidebar.addEventListener('mouseenter', () => {
+        if (!isSidebarLocked && !sidebarOpen) {
+            sidebarOpen = true;
+            sidebar.classList.remove('sidebar-closed');
+        }
+    });
+
+    sidebar.addEventListener('mouseleave', () => {
+        if (!isSidebarLocked) {
+            sidebarOpen = false;
+            sidebar.classList.add('sidebar-closed');
+        }
+    });
+
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.sidebar-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            button.classList.add('active');
+            document.getElementById(targetTab + '-tab').classList.add('active');
+        });
+    });
+
+    // Window control functionality
+    document.getElementById('close-btn').addEventListener('click', () => {
+        clientUI.remove();
+        toggleButton.remove(); // Also remove the toggle button
+    });
     
-        // Sidebar functionality
+    document.getElementById('minimize-btn').addEventListener('click', () => {
+        const content = document.getElementById('client-content');
         const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebar-toggle');
-        const sidebarLock = document.getElementById('sidebar-lock');
     
-        sidebarToggle.addEventListener('click', () => {
-            if (!isSidebarLocked) {
-                sidebarOpen = !sidebarOpen;
-                sidebar.classList.toggle('sidebar-closed', !sidebarOpen);
-            }
-        });
-    
-        sidebarLock.addEventListener('click', () => {
-            isSidebarLocked = !isSidebarLocked;
-            sidebarLock.classList.toggle('locked', isSidebarLocked);
-            sidebarLock.textContent = isSidebarLocked ? '🔒' : '🔓';
-            sidebar.classList.toggle('sidebar-locked', isSidebarLocked);
-    
-            if (isSidebarLocked && !sidebarOpen) {
-                sidebarOpen = true;
-                sidebar.classList.remove('sidebar-closed');
-            }
-        });
-    
-        // Auto-hide sidebar when mouse leaves (immediate close)
-        sidebar.addEventListener('mouseenter', () => {
-            if (!isSidebarLocked && !sidebarOpen) {
-                sidebarOpen = true;
-                sidebar.classList.remove('sidebar-closed');
-            }
-        });
-    
-        sidebar.addEventListener('mouseleave', () => {
-            if (!isSidebarLocked) {
-                sidebarOpen = false;
-                sidebar.classList.add('sidebar-closed');
-            }
-        });
-    
-        // Tab functionality
-        const tabButtons = document.querySelectorAll('.sidebar-tab');
-        const tabContents = document.querySelectorAll('.tab-content');
-    
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const targetTab = button.getAttribute('data-tab');
-    
-                // Remove active class from all tabs and contents
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-    
-                // Add active class to clicked tab and corresponding content
-                button.classList.add('active');
-                document.getElementById(targetTab + '-tab').classList.add('active');
-            });
-        });
-    
-        // Window control functionality
-        document.getElementById('close-btn').addEventListener('click', () => {
-            clientUI.remove();
-        });
-    
-        document.getElementById('minimize-btn').addEventListener('click', () => {
-            const content = document.getElementById('client-content');
-            const sidebar = document.getElementById('sidebar');
-    
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                sidebar.style.display = 'flex';
-                clientUI.style.height = isFullscreen ? '100vh' : '600px';
-            } else {
-                content.style.display = 'none';
-                sidebar.style.display = 'none';
-                clientUI.style.height = 'auto';
-            }
-        });
-    
-        document.getElementById('fullscreen-btn').addEventListener('click', () => {
-            isFullscreen = !isFullscreen;
-            clientUI.classList.toggle('fullscreen', isFullscreen);
-    
-            if (isFullscreen) {
-                // Store current position
-                clientUI.setAttribute('data-old-transform', clientUI.style.transform || 'none');
-                clientUI.style.transform = 'none';
-                xOffset = 0;
-                yOffset = 0;
-            } else {
-                // Restore old position
-                const oldTransform = clientUI.getAttribute('data-old-transform');
-                if (oldTransform && oldTransform !== 'none') {
-                    clientUI.style.transform = oldTransform;
-                }
-            }
-        });
-    
-        // Interactive slider functionality
-        document.getElementById('speed-slider').addEventListener('input', (e) => {
-            document.getElementById('speed-value').textContent = e.target.value;
-        });
-    
-        document.getElementById('delay-slider').addEventListener('input', (e) => {
-            document.getElementById('delay-value').textContent = e.target.value + 'ms';
-        });
-    
-        document.getElementById('opacity-slider').addEventListener('input', (e) => {
-            const value = e.target.value;
-            document.getElementById('opacity-value').textContent = value + '%';
-            windowElement.style.opacity = value / 100;
-        });
-    
-        document.getElementById('scale-slider').addEventListener('input', (e) => {
-            const value = e.target.value;
-            document.getElementById('scale-value').textContent = value + '%';
-            clientUI.style.transform = `scale(${value / 100})`;
-        });
-    
-        // Button click effects
-        document.querySelectorAll('.action-btn, .control-btn, .auto-btn, .cheat-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Add click effect
-                e.target.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    e.target.style.transform = '';
-                }, 100);
-    
-                // Log action
-                console.log('Button clicked:', e.target.textContent);
-    
-                // Add visual feedback for specific actions
-                if (e.target.textContent.includes('Start')) {
-                    e.target.style.background = 'linear-gradient(145deg, #059669, #047857)';
-                    setTimeout(() => {
-                        e.target.style.background = '';
-                    }, 2000);
-                }
-            });
-        });
-    
-        // Update stats periodically (demo)
-        let gameTime = 0;
-        setInterval(() => {
-            const scoreElement = document.getElementById('current-score');
-            const questionElement = document.getElementById('question-count');
-            const accuracyElement = document.getElementById('accuracy');
-            const timeElement = document.getElementById('time-played');
-    
-            if (scoreElement && questionElement && accuracyElement && timeElement) {
-                scoreElement.textContent = Math.floor(Math.random() * 10000);
-                questionElement.textContent = Math.floor(Math.random() * 100);
-                accuracyElement.textContent = (85 + Math.random() * 15).toFixed(1) + '%';
-    
-                gameTime++;
-                const minutes = Math.floor(gameTime / 60);
-                const seconds = gameTime % 60;
-                timeElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            }
-        }, 1000);
-    
-        // Add keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey && e.shiftKey) {
-                switch(e.key) {
-                    case 'F':
-                        e.preventDefault();
-                        document.getElementById('fullscreen-btn').click();
-                        break;
-                    case 'M':
-                        e.preventDefault();
-                        document.getElementById('minimize-btn').click();
-                        break;
-                    case 'S':
-                        e.preventDefault();
-                        sidebarToggle.click();
-                        break;
-                }
-            }
-        });
-    
-        // Enhanced interactive functionality for new tabs
-    
-        // Admin terminal functionality
-        const adminCommand = document.getElementById('admin-command');
-        const terminalOutput = document.getElementById('terminal-output');
-    
-        if (adminCommand) {
-            adminCommand.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    const command = e.target.value.trim();
-                    if (command) {
-                        executeAdminCommand(command);
-                        e.target.value = '';
-                    }
-                }
-            });
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            sidebar.style.display = 'flex';
+            clientUI.style.height = isFullscreen ? '100vh' : '600px';
+        } else {
+            content.style.display = 'none';
+            sidebar.style.display = 'none';
+            clientUI.style.height = 'auto';
         }
-    
-        // Quick command buttons
-        document.querySelectorAll('.cmd-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const command = btn.getAttribute('data-cmd');
-                executeAdminCommand(command);
-            });
-        });
-    
-        function executeAdminCommand(command) {
-            const output = document.getElementById('terminal-output');
-            if (!output) return;
-    
-            // Add command to terminal
-            const commandLine = document.createElement('div');
-            commandLine.className = 'terminal-line';
-            commandLine.innerHTML = `$ ${command}`;
-            output.appendChild(commandLine);
-    
-            // Simulate command execution
-            setTimeout(() => {
-                const resultLine = document.createElement('div');
-                resultLine.className = 'terminal-line';
-    
-                switch(command) {
-                    case 'status':
-                        resultLine.innerHTML = '✓ All systems operational';
-                        break;
-                    case 'restart':
-                        resultLine.innerHTML = '🔄 Services restarted successfully';
-                        break;
-                    case 'backup':
-                        resultLine.innerHTML = '💾 Backup created: backup_' + Date.now() + '.db';
-                        break;
-                    case 'clear':
-                        output.innerHTML = '<div class="terminal-line">$ Terminal cleared</div>';
-                        return;
-                    case 'help':
-                        resultLine.innerHTML = 'Available commands: status, restart, backup, clear, help';
-                        break;
-                    default:
-                        resultLine.innerHTML = `❌ Unknown command: ${command}`;
+    });
+
+    document.getElementById('fullscreen-btn').addEventListener('click', () => {
+        isFullscreen = !isFullscreen;
+        clientUI.classList.toggle('fullscreen', isFullscreen);
+
+        if (isFullscreen) {
+            clientUI.setAttribute('data-old-transform', clientUI.style.transform || 'none');
+            clientUI.style.transform = 'none';
+            xOffset = 0;
+            yOffset = 0;
+        } else {
+            const oldTransform = clientUI.getAttribute('data-old-transform');
+            if (oldTransform && oldTransform !== 'none') {
+                clientUI.style.transform = oldTransform;
+            }
+        }
+    });
+
+    // Interactive slider functionality
+    document.getElementById('speed-slider').addEventListener('input', (e) => {
+        document.getElementById('speed-value').textContent = e.target.value;
+    });
+
+    document.getElementById('delay-slider').addEventListener('input', (e) => {
+        document.getElementById('delay-value').textContent = e.target.value + 'ms';
+    });
+
+    // Admin terminal functionality
+    const adminCommand = document.getElementById('admin-command');
+    const terminalOutput = document.getElementById('terminal-output');
+
+    if (adminCommand) {
+        adminCommand.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const command = e.target.value.trim();
+                if (command) {
+                    executeAdminCommand(command);
+                    e.target.value = '';
                 }
-    
-                output.appendChild(resultLine);
-                output.scrollTop = output.scrollHeight;
-            }, 500);
-    
+            }
+        });
+    }
+
+    // Quick command buttons
+    document.querySelectorAll('.cmd-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const command = btn.getAttribute('data-cmd');
+            executeAdminCommand(command);
+        });
+    });
+
+    function executeAdminCommand(command) {
+        const output = document.getElementById('terminal-output');
+        if (!output) return;
+
+        const commandLine = document.createElement('div');
+        commandLine.className = 'terminal-line';
+        commandLine.innerHTML = `$ ${command}`;
+        output.appendChild(commandLine);
+
+        setTimeout(() => {
+            const resultLine = document.createElement('div');
+            resultLine.className = 'terminal-line';
+
+            switch(command) {
+                case 'status':
+                    resultLine.innerHTML = '✓ All systems operational';
+                    break;
+                case 'restart':
+                    resultLine.innerHTML = '🔄 Services restarted successfully';
+                    break;
+                case 'backup':
+                    resultLine.innerHTML = '💾 Backup created: backup_' + Date.now() + '.db';
+                    break;
+                case 'clear':
+                    output.innerHTML = '<div class="terminal-line">$ Terminal cleared</div>';
+                    return;
+                case 'help':
+                    resultLine.innerHTML = 'Available commands: status, restart, backup, clear, help';
+                    break;
+                default:
+                    resultLine.innerHTML = `❌ Unknown command: ${command}`;
+            }
+            
+            output.appendChild(resultLine);
             output.scrollTop = output.scrollHeight;
-        }
+        }, 500);
+        
+        output.scrollTop = output.scrollHeight;
+    }
     
-        // Log filter functionality
-        const logFilter = document.querySelector('.log-filter');
-        if (logFilter) {
-            logFilter.addEventListener('change', (e) => {
-                const filterValue = e.target.value;
-                const logEntries = document.querySelectorAll('.log-entry');
-    
-                logEntries.forEach(entry => {
-                    if (filterValue === 'all') {
-                        entry.style.display = 'flex';
-                    } else {
-                        const level = entry.querySelector('.log-level').textContent.toLowerCase();
-                        entry.style.display = level === filterValue ? 'flex' : 'none';
-                    }
-                });
-            });
-        }
-    
-        // Update system resources periodically
-        setInterval(() => {
-            const cpuFill = document.querySelector('.resource-item:nth-child(1) .resource-fill');
-            const memFill = document.querySelector('.resource-item:nth-child(2) .resource-fill');
-            const diskFill = document.querySelector('.resource-item:nth-child(3) .resource-fill');
-    
-            const cpuValue = document.querySelector('.resource-item:nth-child(1) .resource-value');
-            const memValue = document.querySelector('.resource-item:nth-child(2) .resource-value');
-            const diskValue = document.querySelector('.resource-item:nth-child(3) .resource-value');
-    
-            if (cpuFill && memFill && diskFill) {
-                const cpu = Math.floor(Math.random() * 60 + 20);
-                const mem = Math.floor(Math.random() * 40 + 50);
-                const disk = Math.floor(Math.random() * 30 + 10);
-    
-                cpuFill.style.width = cpu + '%';
-                memFill.style.width = mem + '%';
-                diskFill.style.width = disk + '%';
-    
-                if (cpuValue) cpuValue.textContent = cpu + '%';
-                if (memValue) memValue.textContent = mem + '%';
-                if (diskValue) diskValue.textContent = disk + '%';
-            }
-        }, 2000);
-    
-        // Auto-update data metrics
-        setInterval(() => {
-            const totalGames = document.getElementById('total-games');
-            const winRate = document.getElementById('win-rate');
-            const avgScore = document.getElementById('avg-score');
-    
-            if (totalGames) {
-                totalGames.textContent = (parseInt(totalGames.textContent.replace(',', '')) + Math.floor(Math.random() * 3)).toLocaleString();
-            }
-            if (winRate) {
-                const rate = (85 + Math.random() * 10).toFixed(1);
-                winRate.textContent = rate + '%';
-            }
-            if (avgScore) {
-                avgScore.textContent = (8000 + Math.floor(Math.random() * 2000)).toLocaleString();
-            }
-        }, 5000);
-    
-        // Simulate new log entries
-        setInterval(() => {
-            const logViewer = document.getElementById('log-viewer');
-            if (logViewer && Math.random() > 0.7) {
-                const logTypes = ['info', 'warning', 'error'];
-                const messages = [
-                    'User authentication successful',
-                    'Cache cleared successfully',
-                    'Database connection established',
-                    'High CPU usage detected',
-                    'Memory optimization completed',
-                    'Network timeout occurred',
-                    'Backup process started'
-                ];
-    
-                const logType = logTypes[Math.floor(Math.random() * logTypes.length)];
-                const message = messages[Math.floor(Math.random() * messages.length)];
-                const time = new Date().toLocaleTimeString();
-    
-                const logEntry = document.createElement('div');
-                logEntry.className = `log-entry ${logType}`;
-                logEntry.innerHTML = `
-                    <span class="log-time">${time}</span>
-                    <span class="log-level ${logType}">${logType.toUpperCase()}</span>
-                    <span class="log-message">${message}</span>
-                `;
-    
-                logViewer.appendChild(logEntry);
-                logViewer.scrollTop = logViewer.scrollHeight;
-    
-                // Remove old entries if too many
-                const entries = logViewer.querySelectorAll('.log-entry');
-                if (entries.length > 50) {
-                    entries[0].remove();
+    // Log filter functionality
+    const logFilter = document.querySelector('.log-filter');
+    if (logFilter) {
+        logFilter.addEventListener('change', (e) => {
+            const filterValue = e.target.value;
+            const logEntries = document.querySelectorAll('.log-entry');
+
+            logEntries.forEach(entry => {
+                if (filterValue === 'all') {
+                    entry.style.display = 'flex';
+                } else {
+                    const level = entry.querySelector('.log-level').textContent.toLowerCase();
+                    entry.style.display = level === filterValue ? 'flex' : 'none';
                 }
-            }
-        }, 3000);
+            });
+        });
+    }
+
+    // Update stats periodically (demo)
+    let gameTime = 0;
+    setInterval(() => {
+        const scoreElement = document.getElementById('current-score');
+        const questionElement = document.getElementById('question-count');
+        const accuracyElement = document.getElementById('accuracy');
+        const timeElement = document.getElementById('time-played');
+
+        if (scoreElement && questionElement && accuracyElement && timeElement) {
+            scoreElement.textContent = Math.floor(Math.random() * 10000);
+            questionElement.textContent = Math.floor(Math.random() * 100);
+            accuracyElement.textContent = (85 + Math.random() * 15).toFixed(1) + '%';
+            
+            gameTime++;
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = gameTime % 60;
+            timeElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }, 1000);
     
-        console.log('🎮 Blooket Client Pro UI loaded successfully!');
-        console.log('📋 Keyboard shortcuts:');
-        console.log('    Ctrl+Shift+F: Toggle Fullscreen');
-        console.log('    Ctrl+Shift+M: Minimize/Restore');
-        console.log('    Ctrl+Shift+S: Toggle Sidebar');
-        console.log('🚀 All ' + document.querySelectorAll('.sidebar-tab').length + ' tabs loaded successfully!');
-    })();
+    // Update system resources periodically
+    setInterval(() => {
+        const cpuFill = document.querySelector('.resource-item:nth-child(1) .resource-fill');
+        const memFill = document.querySelector('.resource-item:nth-child(2) .resource-fill');
+        const diskFill = document.querySelector('.resource-item:nth-child(3) .resource-fill');
+
+        const cpuValue = document.querySelector('.resource-item:nth-child(1) .resource-value');
+        const memValue = document.querySelector('.resource-item:nth-child(2) .resource-value');
+        const diskValue = document.querySelector('.resource-item:nth-child(3) .resource-value');
+
+        if (cpuFill && memFill && diskFill) {
+            const cpu = Math.floor(Math.random() * 60 + 20);
+            const mem = Math.floor(Math.random() * 40 + 50);
+            const disk = Math.floor(Math.random() * 30 + 10);
+
+            cpuFill.style.width = cpu + '%';
+            memFill.style.width = mem + '%';
+            diskFill.style.width = disk + '%';
+
+            if (cpuValue) cpuValue.textContent = cpu + '%';
+            if (memValue) memValue.textContent = mem + '%';
+            if (diskValue) diskValue.textContent = disk + '%';
+        }
+    }, 2000);
+    
+    // Auto-update data metrics
+    setInterval(() => {
+        const totalGames = document.getElementById('total-games');
+        const winRate = document.getElementById('win-rate');
+        const avgScore = document.getElementById('avg-score');
+
+        if (totalGames) {
+            totalGames.textContent = (parseInt(totalGames.textContent.replace(/,/g, '')) + Math.floor(Math.random() * 3)).toLocaleString();
+        }
+        if (winRate) {
+            const rate = (85 + Math.random() * 10).toFixed(1);
+            winRate.textContent = rate + '%';
+        }
+        if (avgScore) {
+            avgScore.textContent = (8000 + Math.floor(Math.random() * 2000)).toLocaleString();
+        }
+    }, 5000);
+
+    // Simulate new log entries
+    setInterval(() => {
+        const logViewer = document.getElementById('log-viewer');
+        if (logViewer && Math.random() > 0.7) {
+            const logTypes = ['info', 'warning', 'error'];
+            const messages = [
+                'User authentication successful',
+                'Cache cleared successfully',
+                'Database connection established',
+                'High CPU usage detected',
+                'Memory optimization completed',
+                'Network timeout occurred',
+                'Backup process started'
+            ];
+            
+            const logType = logTypes[Math.floor(Math.random() * logTypes.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            const time = new Date().toLocaleTimeString();
+
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${logType}`;
+            logEntry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-level ${logType}">${logType.toUpperCase()}</span>
+                <span class="log-message">${message}</span>
+            `;
+
+            logViewer.appendChild(logEntry);
+            logViewer.scrollTop = logViewer.scrollHeight;
+
+            const entries = logViewer.querySelectorAll('.log-entry');
+            if (entries.length > 50) {
+                entries[0].remove();
+            }
+        }
+    }, 3000);
+    
+    console.log('🎮 Blooket Client Pro UI loaded successfully!');
+    console.log('📋 Keyboard shortcuts:');
+    console.log('   Ctrl+Shift+F: Toggle Fullscreen');
+    console.log('   Ctrl+Shift+M: Minimize/Restore');
+    console.log('   Ctrl+Shift+S: Toggle Sidebar');
+    console.log('🚀 All ' + document.querySelectorAll('.sidebar-tab').length + ' tabs loaded successfully!');
+})();
+
 
 })(); // End of main IIFE
