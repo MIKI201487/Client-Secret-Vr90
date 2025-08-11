@@ -6275,7 +6275,1119 @@ javascript:(()=>{
         }
     })();
 
-    // Blooket Client UI - Enhanced Interactive Interface
+// Console-ready version of the Trade Button code
+(function() {
+    // Create a container for our app
+    const appContainer = document.createElement('div');
+    appContainer.id = 'tradeButtonApp';
+    
+    const appHTML = `
+    <style>
+        #tradeButtonApp .container-wrapper {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        
+        #tradeButtonApp .container-wrapper button {
+            pointer-events: auto;
+        }
+
+        #tradeButtonApp .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            pointer-events: auto;
+        }
+
+        #tradeButtonApp .modal-content {
+            background-color: white;
+            padding: 2rem;
+            width: 400px;
+            height: 400px;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: 0.5rem;
+        }
+
+        /* Full-page trade modal */
+        #tradeButtonApp #tradeModalUI .modal-content {
+            width: 90%;
+            height: 90%;
+            aspect-ratio: auto;
+        }
+        
+        #tradeButtonApp #yourOfferContent {
+            transition: all 0.3s ease-in-out;
+            position: relative;
+        }
+
+        /* Styles for the radio switches */
+        #tradeButtonApp .switch-container {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        #tradeButtonApp .switch-container label {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            color: #4a5568;
+        }
+        #tradeButtonApp .switch-container input[type="radio"] {
+            display: none;
+        }
+        #tradeButtonApp .switch-container input[type="radio"]:checked + label {
+            background-color: #f6ad55;
+            color: white;
+        }
+
+        /* New style for the confirmed offer section */
+        #tradeButtonApp .confirmed-offer {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+        }
+        #tradeButtonApp .confirmed-offer > span {
+            color: #16a34a;
+        }
+        #tradeButtonApp #yourOfferOverlay {
+            background-color: rgba(34, 197, 94, 0.2);
+            transition: all 0.3s ease-in-out;
+        }
+        #tradeButtonApp #alertBox {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fca5a5;
+            color: #b91c1c;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 10002;
+        }
+        #tradeButtonApp #stealAlertBox {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #34d399;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 2rem 4rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            z-index: 10002;
+        }
+        #tradeButtonApp .chat-input-area {
+            position: relative;
+        }
+        #tradeButtonApp .typing-indicator {
+            position: absolute;
+            top: -1.5rem;
+            left: 0;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+        #tradeButtonApp #countdownDisplay {
+            color: #FACC15;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Basic styling for elements */
+        #tradeButtonApp button {
+            border: none;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        #tradeButtonApp .bg-yellow-400 {
+            background-color: #fbbf24;
+            color: white;
+        }
+        
+        #tradeButtonApp .bg-yellow-400:hover {
+            background-color: #f59e0b;
+        }
+        
+        #tradeButtonApp .bg-green-500 {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        #tradeButtonApp .bg-green-500:hover {
+            background-color: #059669;
+        }
+        
+        #tradeButtonApp .bg-red-500 {
+            background-color: #ef4444;
+            color: white;
+        }
+        
+        #tradeButtonApp .bg-red-500:hover {
+            background-color: #dc2626;
+        }
+        
+        #tradeButtonApp .bg-blue-500 {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        #tradeButtonApp .bg-blue-500:hover {
+            background-color: #2563eb;
+        }
+        
+        #tradeButtonApp .bg-gray-100 {
+            background-color: #f3f4f6;
+        }
+        
+        #tradeButtonApp .hidden {
+            display: none !important;
+        }
+        
+        #tradeButtonApp input {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+        }
+        
+        #tradeButtonApp ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #tradeButtonApp li {
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+        }
+    </style>
+
+    <!-- The main container for the button -->
+    <div class="container-wrapper">
+        <button id="tradeButton" style="background-color: #fbbf24; color: white; font-weight: bold; padding: 1rem 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 0.5rem 0 0 0.5rem; margin-top: 4rem;">
+            Trade
+        </button>
+    </div>
+
+    <!-- The Trading UI modal -->
+    <div id="tradingUI" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb;">
+                <h2 style="font-size: 1.25rem; font-weight: bold;">Trading</h2>
+                <button id="closeButton" style="color: #6b7280; background: none; padding: 0;">
+                    ✕
+                </button>
+            </div>
+            <div id="dynamicFriendsContent" style="margin-top: 1rem; flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto;">
+                <p style="color: #374151;">No friends here :(</p>
+            </div>
+            
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1rem;">
+                <div class="switch-container">
+                    <input type="radio" id="tradeSwitch" name="action" value="trade" checked>
+                    <label for="tradeSwitch">Trade</label>
+                </div>
+                <div class="switch-container">
+                    <input type="radio" id="stealSwitch" name="action" value="steal">
+                    <label for="stealSwitch">Steal</label>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                <button id="addFriendsButton" class="bg-yellow-400" style="padding: 0.5rem 1rem;">
+                    Add Friends
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- The FULL-PAGE Trade modal -->
+    <div id="tradeModalUI" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb; gap: 1rem;">
+                <h2 style="font-size: 1.875rem; font-weight: bold;" id="tradeModalHeader">Trade</h2>
+                <div style="flex-grow: 1;"></div>
+                <button id="chatButton" class="bg-yellow-400" style="padding: 0.5rem 1rem; border-radius: 0.5rem;">
+                    Chat
+                </button>
+            </div>
+
+            <div style="flex-grow: 1; display: flex; justify-content: space-between; margin-top: 1rem; gap: 2rem;">
+                <div style="flex: 1; border-right: 2px solid #e5e7eb; padding-right: 1rem; display: flex; flex-direction: column;">
+                    <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">Your Offer</h3>
+                    <div id="yourOfferContent" style="height: 100%; background-color: #f3f4f6; border-radius: 0.5rem; padding: 1rem; position: relative; display: flex; flex-direction: column; overflow-y: auto;">
+                        <div id="yourOfferControls" style="display: flex; align-items: center; gap: 0.5rem;">
+                             <button id="addOfferButton" class="bg-green-500" style="width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold;">+</button>
+                             <div id="addOfferInputContainer" style="display: none; align-items: center; gap: 0.5rem;">
+                                <span id="addOfferInputLabel" style="color: black;">Enter Blook Name:</span>
+                                <input type="text" id="addOfferInput" style="width: 10rem; padding: 0.25rem; border-radius: 0.5rem; color: #374151; border: 2px solid #d1d5db;" placeholder="e.g. Ice Crab">
+                             </div>
+                        </div>
+                        <ul id="yourOfferList" style="margin-top: 1rem; flex-grow: 1; width: 100%; gap: 0.5rem;"></ul>
+                        <div id="yourOfferOverlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;" class="hidden">
+                             <span style="font-size: 1.5rem; font-weight: bold; color: #15803d;">Confirmed✅</span>
+                        </div>
+                        <div style="position: absolute; bottom: 1rem; right: 1rem;">
+                            <button id="addCoinsButton" class="bg-yellow-400" style="padding: 0.5rem; border-radius: 0.5rem; font-weight: bold;">
+                                Add Coins
+                            </button>
+                            <div id="addCoinsInputContainer" style="display: none; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                <input type="number" id="addCoinsInput" style="width: 6rem; padding: 0.25rem; border-radius: 0.5rem; color: #374151; border: 2px solid #d1d5db;" placeholder="Amount">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 1; padding-left: 1rem; display: flex; flex-direction: column;">
+                    <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">Their Offer</h3>
+                    <div id="theirOfferContent" style="height: 100%; background-color: #f3f4f6; border-radius: 0.5rem; padding: 1rem; color: #6b7280; overflow-y: auto; position: relative;">
+                        <ul id="theirOfferList" style="width: 100%; gap: 0.5rem;"></ul>
+                        <div id="theirOfferOverlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;" class="hidden bg-green-500 bg-opacity-20">
+                             <span style="font-size: 1.5rem; font-weight: bold; color: #15803d;">Confirmed✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 1.5rem; gap: 1rem;">
+                <button id="acceptButton" class="bg-green-500" style="padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: bold;">
+                    Accept
+                </button>
+                <button id="declineButton" class="bg-red-500" style="padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: bold;">
+                    Decline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- The FULL-PAGE Steal modal -->
+    <div id="stealTradeModalUI" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb; gap: 1rem;">
+                <h2 style="font-size: 1.875rem; font-weight: bold;" id="stealModalHeader">Steal</h2>
+                <div style="flex-grow: 1;"></div>
+                <button id="closeStealModalButton" style="color: #6b7280; background: none; padding: 0; font-size: 2rem;">
+                    ✕
+                </button>
+            </div>
+
+            <div style="flex-grow: 1; display: flex; justify-content: space-between; margin-top: 1rem; gap: 2rem;">
+                <div style="flex: 1; border-right: 2px solid #e5e7eb; padding-right: 1rem; display: flex; flex-direction: column;">
+                    <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">Your Offer</h3>
+                    <div id="yourStealOfferContent" style="height: 100%; background-color: #f3f4f6; border-radius: 0.5rem; padding: 1rem; position: relative; display: flex; flex-direction: column; overflow-y: auto;">
+                        <div id="yourStealOfferControls" style="display: flex; align-items: center; gap: 0.5rem;">
+                             <button id="addStealOfferButton" class="bg-green-500" style="width: 2rem; height: 2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold;">+</button>
+                             <div id="addStealOfferInputContainer" style="display: none; align-items: center; gap: 0.5rem;">
+                                <span style="color: black;">Enter Blook Name:</span>
+                                <input type="text" id="addStealOfferInput" style="width: 10rem; padding: 0.25rem; border-radius: 0.5rem; color: #374151; border: 2px solid #d1d5db;" placeholder="e.g. Ice Crab">
+                             </div>
+                        </div>
+                        <ul id="yourStealOfferList" style="margin-top: 1rem; flex-grow: 1; width: 100%; gap: 0.5rem;"></ul>
+                        <div id="yourStealOfferOverlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;" class="hidden">
+                             <span style="font-size: 1.5rem; font-weight: bold; color: #15803d;">Confirmed✅</span>
+                        </div>
+                        <div style="position: absolute; bottom: 1rem; right: 1rem;">
+                            <button id="addStealCoinsButton" class="bg-yellow-400" style="padding: 0.5rem; border-radius: 0.5rem; font-weight: bold;">
+                                Add Coins
+                            </button>
+                            <div id="addStealCoinsInputContainer" style="display: none; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                                <input type="number" id="addStealCoinsInput" style="width: 6rem; padding: 0.25rem; border-radius: 0.5rem; color: #374151; border: 2px solid #d1d5db;" placeholder="Amount">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="flex: 1; padding-left: 1rem; display: flex; flex-direction: column;">
+                    <h3 style="font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem;">Their Offer</h3>
+                    <div id="theirStealOfferContent" style="height: 100%; background-color: #f3f4f6; border-radius: 0.5rem; padding: 1rem; color: #6b7280; overflow-y: auto; position: relative;">
+                        <ul id="theirStealOfferList" style="width: 100%; gap: 0.5rem;"></ul>
+                        <div id="theirStealOfferOverlay" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;" class="hidden bg-green-500 bg-opacity-20">
+                             <span style="font-size: 1.5rem; font-weight: bold; color: #15803d;">Confirmed✅</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; margin-top: 1.5rem; gap: 1rem;">
+                <button id="acceptStealButton" class="bg-green-500" style="padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: bold;">
+                    Accept
+                </button>
+                <button id="declineStealButton" class="bg-red-500" style="padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: bold;">
+                    Decline
+                </button>
+            </div>
+        </div>
+        <div id="countdownDisplay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 3.75rem; font-weight: bold; z-index: 20;" class="hidden"></div>
+    </div>
+    
+    <!-- The Chat UI modal -->
+    <div id="chatUI" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 32rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb;">
+                <h2 style="font-size: 1.25rem; font-weight: bold;">Chat</h2>
+                <button id="closeChatButton" style="color: #6b7280; background: none; padding: 0;">
+                    ✕
+                </button>
+            </div>
+            <div id="chatLog" style="flex-grow: 1; overflow-y: auto; margin-top: 1rem; padding: 0.5rem; background-color: #f9fafb; border-radius: 0.5rem; display: flex; flex-direction: column;">
+                <!-- Chat messages will appear here -->
+            </div>
+            <div style="margin-top: 1rem;" class="chat-input-area">
+                <div id="chatTypingIndicator" class="typing-indicator hidden">User is typing...</div>
+                <div style="display: flex;">
+                    <input id="chatInput" type="text" style="flex-grow: 1; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.5rem 0 0 0.5rem;" placeholder="Type a message...">
+                    <button id="sendChatButton" class="bg-blue-500" style="padding: 0 1rem; border-radius: 0 0.5rem 0.5rem 0; font-weight: bold;">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Temporary alert box for decline action -->
+    <div id="alertBox" class="hidden"></div>
+    <div id="stealAlertBox" class="hidden">Successful Steal!</div>
+
+    <!-- The Add Friends UI modal -->
+    <div id="addFriendsUI" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb;">
+                <h2 style="font-size: 1.25rem; font-weight: bold;">Add Friends</h2>
+                <button id="closeFriendsUI" style="color: #6b7280; background: none; padding: 0;">
+                    ✕
+                </button>
+            </div>
+            <div style="margin-top: 1rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <p style="color: #374151;">Enter your friends blooket name!</p>
+                    <input id="friendInput" type="text" style="margin-top: 0.5rem; width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;" placeholder="Blooket Username">
+                    <p id="validFriendMessage" style="margin-top: 0.5rem; color: #10b981; font-size: 0.875rem; font-weight: bold;" class="hidden"></p>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button id="addButton" class="bg-yellow-400" style="padding: 0.5rem 1rem; opacity: 0.5; cursor: not-allowed;" disabled>
+                        Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+`;
+
+    appContainer.innerHTML = appHTML;
+    document.body.appendChild(appContainer);
+
+    // Now initialize the JavaScript functionality
+    setTimeout(() => {
+        // Mock Firebase variables since we don't have Firebase in console
+        const appId = 'console-app-id';
+        const firebaseConfig = {};
+        const initialAuthToken = null;
+        
+        // --- Blook Data and Rarity Logic ---
+        const blookData = {
+            'Ice Crab': 'Rare',
+            'Baby Shark': 'Common',
+            'Blue Whale': 'Uncommon',
+            'Cactus': 'Common',
+            'Pterodactyl': 'Rare',
+            'King of Hearts': 'Legendary',
+            'Unicorn': 'Mystical',
+            'Rainbow': 'Chroma',
+            'Agent Owl': 'Unique',
+            'Astronaut': 'Uncommon',
+            'Swashbuckler': 'Rare',
+            'Jellyfish': 'Common',
+            'King': 'Legendary',
+            'Spooky Ghost': 'Rare',
+            'Shadow Dragon': 'Mystical',
+            'Lucky Cat': 'Unique',
+            'Mega Bot': 'Chroma',
+            'Red Astronaut': 'Epic',
+            'Vampire': 'Epic'
+        };
+        
+        const rarityWeights = [
+            { name: 'Common', weight: 40 },
+            { name: 'Uncommon', weight: 25 },
+            { name: 'Rare', weight: 15 },
+            { name: 'Epic', weight: 10 },
+            { name: 'Legendary', weight: 5 },
+            { name: 'Chroma', weight: 4 },
+            { name: 'Mystical', weight: 1 }
+        ];
+
+        function getRandomBlook() {
+            let totalWeight = rarityWeights.reduce((sum, rarity) => sum + rarity.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+
+            for (const rarity of rarityWeights) {
+                randomNum -= rarity.weight;
+                if (randomNum <= 0) {
+                    const filteredBlooks = Object.keys(blookData).filter(name => blookData[name] === rarity.name);
+                    if (filteredBlooks.length > 0) {
+                        const randomBlookName = filteredBlooks[Math.floor(Math.random() * filteredBlooks.length)];
+                        return { name: randomBlookName, rarity: blookData[randomBlookName] };
+                    }
+                }
+            }
+            return { name: 'Mystery Blook', rarity: 'Common' };
+        }
+
+        // Main function to set up the UI
+        function setupUI() {
+            // Get all the UI elements
+            const tradeButton = appContainer.querySelector('#tradeButton');
+            const tradingUI = appContainer.querySelector('#tradingUI');
+            const closeButton = appContainer.querySelector('#closeButton');
+            const addFriendsButton = appContainer.querySelector('#addFriendsButton');
+            const addFriendsUI = appContainer.querySelector('#addFriendsUI');
+            const closeFriendsUI = appContainer.querySelector('#closeFriendsUI');
+            const friendInput = appContainer.querySelector('#friendInput');
+            const addButton = appContainer.querySelector('#addButton');
+            const validFriendMessage = appContainer.querySelector('#validFriendMessage');
+            const dynamicFriendsContent = appContainer.querySelector('#dynamicFriendsContent');
+            const tradeSwitch = appContainer.querySelector('#tradeSwitch');
+            const stealSwitch = appContainer.querySelector('#stealSwitch');
+            const alertBox = appContainer.querySelector('#alertBox');
+            const stealAlertBox = appContainer.querySelector('#stealAlertBox');
+            const tradeModalUI = appContainer.querySelector('#tradeModalUI');
+            const acceptButton = appContainer.querySelector('#acceptButton');
+            const declineButton = appContainer.querySelector('#declineButton');
+            const yourOfferContent = appContainer.querySelector('#yourOfferContent');
+            const theirOfferList = appContainer.querySelector('#theirOfferList');
+            const addOfferButton = appContainer.querySelector('#addOfferButton');
+            const addOfferInput = appContainer.querySelector('#addOfferInput');
+            const addOfferInputContainer = appContainer.querySelector('#addOfferInputContainer');
+            const yourOfferList = appContainer.querySelector('#yourOfferList');
+            const yourOfferOverlay = appContainer.querySelector('#yourOfferOverlay');
+            const addCoinsButton = appContainer.querySelector('#addCoinsButton');
+            const addCoinsInputContainer = appContainer.querySelector('#addCoinsInputContainer');
+            const addCoinsInput = appContainer.querySelector('#addCoinsInput');
+            const theirOfferContent = appContainer.querySelector('#theirOfferContent');
+            const theirOfferOverlay = appContainer.querySelector('#theirOfferOverlay');
+            const tradeModalHeader = appContainer.querySelector('#tradeModalHeader');
+            const chatButton = appContainer.querySelector('#chatButton');
+            const countdownDisplay = appContainer.querySelector('#countdownDisplay');
+            const stealTradeModalUI = appContainer.querySelector('#stealTradeModalUI');
+            const closeStealModalButton = appContainer.querySelector('#closeStealModalButton');
+            const yourStealOfferContent = appContainer.querySelector('#yourStealOfferContent');
+            const theirStealOfferContent = appContainer.querySelector('#theirStealOfferContent');
+            const theirStealOfferList = appContainer.querySelector('#theirStealOfferList');
+            const addStealOfferButton = appContainer.querySelector('#addStealOfferButton');
+            const addStealOfferInputContainer = appContainer.querySelector('#addStealOfferInputContainer');
+            const addStealOfferInput = appContainer.querySelector('#addStealOfferInput');
+            const yourStealOfferList = appContainer.querySelector('#yourStealOfferList');
+            const yourStealOfferOverlay = appContainer.querySelector('#yourStealOfferOverlay');
+            const acceptStealButton = appContainer.querySelector('#acceptStealButton');
+            const declineStealButton = appContainer.querySelector('#declineStealButton');
+            const addStealCoinsButton = appContainer.querySelector('#addStealCoinsButton');
+            const addStealCoinsInputContainer = appContainer.querySelector('#addStealCoinsInputContainer');
+            const addStealCoinsInput = appContainer.querySelector('#addStealCoinsInput');
+            const chatUI = appContainer.querySelector('#chatUI');
+            const closeChatButton = appContainer.querySelector('#closeChatButton');
+            const chatLog = appContainer.querySelector('#chatLog');
+            const chatInput = appContainer.querySelector('#chatInput');
+            const sendChatButton = appContainer.querySelector('#sendChatButton');
+            const chatTypingIndicator = appContainer.querySelector('#chatTypingIndicator');
+
+            let currentAction = 'trade';
+            let currentFriends = [];
+            let yourOfferedBlooks = [];
+            let yourOfferedCoins = 0;
+            let theirOfferedBlooks = [];
+            let userRequestedBlook = null;
+            let theirStealOfferedBlooks = [];
+            let yourStealOfferedBlooks = [];
+            let yourStealOfferedCoins = 0;
+
+            // Function to reset the trade UI to its initial state
+            function resetTradeUI() {
+                yourOfferContent.classList.remove('bg-green-500', 'bg-opacity-20');
+                acceptButton.textContent = 'Accept';
+                yourOfferList.innerHTML = '';
+                theirOfferList.innerHTML = '';
+                yourOfferContent.classList.remove('confirmed-offer');
+                yourOfferOverlay.classList.add('hidden');
+                
+                theirOfferContent.classList.remove('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                theirOfferOverlay.classList.add('hidden');
+                theirOfferedBlooks = [];
+                
+                addOfferButton.classList.remove('hidden');
+                addOfferInputContainer.style.display = 'none';
+                addOfferInput.value = '';
+                yourOfferedBlooks = [];
+                yourOfferedCoins = 0;
+                addCoinsButton.textContent = 'Add Coins';
+                addCoinsInputContainer.style.display = 'none';
+                addCoinsButton.classList.remove('hidden');
+                
+                userRequestedBlook = null;
+            }
+
+            // Function to reset the steal UI
+            function resetStealUI() {
+                yourStealOfferContent.classList.remove('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                yourStealOfferOverlay.classList.add('hidden');
+                theirStealOfferContent.classList.remove('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                theirStealOfferOverlay.classList.add('hidden');
+                acceptStealButton.textContent = 'Accept';
+                yourStealOfferedBlooks = [];
+                yourStealOfferedCoins = 0;
+                theirStealOfferedBlooks = [];
+                addStealOfferButton.classList.remove('hidden');
+                addStealOfferInputContainer.style.display = 'none';
+                addStealCoinsButton.classList.remove('hidden');
+                addStealCoinsButton.textContent = 'Add Coins';
+                addStealCoinsInputContainer.style.display = 'none';
+                renderStealOffers();
+            }
+
+            // Function to add a blook to your offer
+            function addBlookToTrade(blookName) {
+                const yourBlook = { name: blookName };
+                yourOfferedBlooks.push(yourBlook);
+                renderOffers();
+                
+                if (userRequestedBlook && blookName === userRequestedBlook) {
+                    confirmYourOffer();
+                }
+            }
+            
+            // Function to add a blook to their offer
+            function addBlookToTheirTrade(blookName) {
+                const theirBlook = { name: blookName };
+                theirOfferedBlooks.push(theirBlook);
+                renderOffers();
+            }
+
+            // Function to render the offers from the arrays
+            function renderOffers() {
+                yourOfferList.innerHTML = '';
+                if (yourOfferedBlooks.length > 0) {
+                     yourOfferedBlooks.forEach((blook, index) => {
+                        const yourItem = document.createElement('li');
+                        yourItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer;';
+                        yourItem.textContent = blook.name;
+                        yourItem.addEventListener('click', () => {
+                            yourOfferedBlooks.splice(index, 1);
+                            renderOffers();
+                        });
+                        yourOfferList.appendChild(yourItem);
+                    });
+                }
+                
+                if (yourOfferedCoins > 0) {
+                     const coinItem = document.createElement('li');
+                     coinItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer;';
+                     coinItem.textContent = `${yourOfferedCoins} Wen`;
+                     coinItem.addEventListener('click', () => {
+                         yourOfferedCoins = 0;
+                         addCoinsButton.textContent = 'Add Coins';
+                         addCoinsButton.classList.remove('hidden');
+                         renderOffers();
+                     });
+                     yourOfferList.appendChild(coinItem);
+                }
+
+                theirOfferList.innerHTML = '';
+                if (theirOfferedBlooks.length > 0) {
+                    theirOfferedBlooks.forEach(blook => {
+                        const theirItem = document.createElement('li');
+                        theirItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0;';
+                        theirItem.innerHTML = `<span style="color: black;">${blook.name}</span>`;
+                        theirOfferList.appendChild(theirItem);
+                    });
+                }
+            }
+
+            function renderStealOffers() {
+                yourStealOfferList.innerHTML = '';
+                if (yourStealOfferedBlooks.length > 0) {
+                    yourStealOfferedBlooks.forEach((blook, index) => {
+                        const yourItem = document.createElement('li');
+                        yourItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer;';
+                        yourItem.textContent = blook.name;
+                        yourItem.addEventListener('click', () => {
+                            yourStealOfferedBlooks.splice(index, 1);
+                            renderStealOffers();
+                        });
+                        yourStealOfferList.appendChild(yourItem);
+                    });
+                }
+                if (yourStealOfferedCoins > 0) {
+                     const coinItem = document.createElement('li');
+                     coinItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer;';
+                     coinItem.textContent = `${yourStealOfferedCoins} Wen`;
+                     coinItem.addEventListener('click', () => {
+                         yourStealOfferedCoins = 0;
+                         addStealCoinsButton.textContent = 'Add Coins';
+                         addStealCoinsButton.classList.remove('hidden');
+                         renderStealOffers();
+                     });
+                     yourStealOfferList.appendChild(coinItem);
+                }
+                theirStealOfferList.innerHTML = '';
+                if (theirStealOfferedBlooks.length > 0) {
+                    theirStealOfferedBlooks.forEach(blook => {
+                        const theirItem = document.createElement('li');
+                        theirItem.style.cssText = 'display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0;';
+                        theirItem.textContent = blook.name;
+                        theirStealOfferList.appendChild(theirItem);
+                    });
+                }
+            }
+
+            // Function to show a temporary alert
+            function showAlert(message) {
+                alertBox.textContent = message;
+                alertBox.classList.remove('hidden');
+                setTimeout(() => {
+                    alertBox.classList.add('hidden');
+                }, 3000);
+            }
+            
+            // Function to get bot response
+            async function getBotResponse(userMessage) {
+                chatTypingIndicator.classList.remove('hidden');
+                
+                const lowerCaseMessage = userMessage.toLowerCase();
+                
+                if (lowerCaseMessage.includes('trade') && lowerCaseMessage.includes('for')) {
+                    const parts = lowerCaseMessage.split('for');
+                    if (parts.length === 2) {
+                        const myOfferPart = parts[0].replace(/i'll trade you|i want to trade|trade|can i|my/gi, '').trim();
+                        const theirOfferPart = parts[1].trim();
+
+                        const myOfferedBlook = myOfferPart.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+                        const theirOfferedBlook = theirOfferPart.split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
+                        
+                        addBlookToTheirTrade(theirOfferedBlook);
+                        confirmBotOffer();
+                        userRequestedBlook = myOfferedBlook;
+
+                        const botResponse = `Sure. I'll trade you my ${theirOfferedBlook} for your ${myOfferedBlook}!`;
+                        appendMessage('bot', botResponse);
+                    }
+                } else if (lowerCaseMessage.includes('decline') || lowerCaseMessage.includes('cancel')) {
+                    tradeModalUI.classList.add('hidden');
+                    resetTradeUI();
+                    showAlert('You Declined the trade!');
+                    appendMessage('bot', `Okay, I've canceled the trade.`);
+                } else {
+                    // Simple bot responses for demo
+                    const responses = [
+                        "That's interesting! Tell me more about trading.",
+                        "I love collecting blooks too!",
+                        "What's your favorite blook?",
+                        "Trading is so fun, isn't it?",
+                        "I'm always looking for new blooks to trade."
+                    ];
+                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                    appendMessage('bot', randomResponse);
+                }
+
+                chatTypingIndicator.classList.add('hidden');
+            }
+            
+            function confirmBotOffer() {
+                 theirOfferContent.classList.add('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                 theirOfferOverlay.classList.remove('hidden');
+            }
+
+            function confirmYourOffer() {
+                 acceptButton.textContent = 'Unconfirm';
+                 yourOfferContent.classList.add('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                 yourOfferOverlay.classList.remove('hidden');
+                 addOfferButton.classList.add('hidden');
+                 addCoinsButton.classList.add('hidden');
+            }
+            
+            // Function to append messages to the chat log
+            function appendMessage(sender, message) {
+                const messageElement = document.createElement('div');
+                messageElement.style.cssText = `padding: 0.5rem; border-radius: 0.5rem; max-width: 80%; margin: 0.25rem 0; ${sender === 'user' ? 'background-color: #3b82f6; color: white; align-self: flex-end;' : 'background-color: #e5e7eb; color: #374151; align-self: flex-start;'}`;
+                messageElement.textContent = message;
+                chatLog.appendChild(messageElement);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+
+            // Function to start the countdown
+            function startCountdown() {
+                let timeLeft = 5.0;
+                countdownDisplay.textContent = timeLeft.toFixed(1);
+                countdownDisplay.classList.remove('hidden');
+
+                const interval = setInterval(() => {
+                    timeLeft -= 0.1;
+                    if (timeLeft <= 0.1) {
+                        clearInterval(interval);
+                        countdownDisplay.classList.add('hidden');
+                        stealAlertBox.classList.remove('hidden');
+                        setTimeout(() => {
+                            stealAlertBox.classList.add('hidden');
+                            stealTradeModalUI.classList.add('hidden');
+                            resetStealUI();
+                        }, 2000);
+                    } else {
+                        countdownDisplay.textContent = timeLeft.toFixed(1);
+                    }
+                }, 100);
+            }
+
+            // Event listeners
+            tradeButton.addEventListener('click', () => {
+                tradingUI.classList.remove('hidden');
+            });
+            
+            closeButton.addEventListener('click', () => {
+                tradingUI.classList.add('hidden');
+            });
+            
+            tradingUI.addEventListener('click', (event) => {
+                if (event.target === tradingUI) {
+                    tradingUI.classList.add('hidden');
+                }
+            });
+            
+            tradeModalUI.addEventListener('click', (event) => {
+                if (event.target === tradeModalUI) {
+                    tradeModalUI.classList.add('hidden');
+                    resetTradeUI();
+                }
+            });
+
+            closeStealModalButton.addEventListener('click', () => {
+                stealTradeModalUI.classList.add('hidden');
+                resetStealUI();
+            });
+            
+            stealTradeModalUI.addEventListener('click', (event) => {
+                if (event.target === stealTradeModalUI) {
+                    stealTradeModalUI.classList.add('hidden');
+                    resetStealUI();
+                }
+            });
+
+            acceptStealButton.addEventListener('click', () => {
+                yourStealOfferContent.classList.add('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                yourStealOfferOverlay.classList.remove('hidden');
+                theirStealOfferContent.classList.add('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                theirStealOfferOverlay.classList.remove('hidden');
+                startCountdown();
+            });
+
+            declineStealButton.addEventListener('click', () => {
+                stealTradeModalUI.classList.add('hidden');
+                resetStealUI();
+                showAlert('You Declined the steal!');
+            });
+            
+            addOfferButton.addEventListener('click', () => {
+                addOfferButton.classList.add('hidden');
+                addOfferInputContainer.style.display = 'flex';
+                addOfferInput.focus();
+            });
+
+            addOfferInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (addOfferInput.value.trim() !== '') {
+                         addBlookToTrade(addOfferInput.value);
+                    }
+                    addOfferInputContainer.style.display = 'none';
+                    addOfferButton.classList.remove('hidden');
+                    addOfferInput.value = '';
+                }
+            });
+            
+            addStealOfferButton.addEventListener('click', () => {
+                addStealOfferButton.classList.add('hidden');
+                addStealOfferInputContainer.style.display = 'flex';
+                addStealOfferInput.focus();
+            });
+            
+            addStealOfferInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (addStealOfferInput.value.trim() !== '') {
+                        const blookName = addStealOfferInput.value.trim();
+                        theirStealOfferedBlooks.push({ name: blookName });
+                        renderStealOffers();
+                    }
+                    addStealOfferInputContainer.style.display = 'none';
+                    addStealOfferButton.classList.remove('hidden');
+                    addStealOfferInput.value = '';
+                }
+            });
+
+            addCoinsButton.addEventListener('click', () => {
+                addCoinsButton.classList.add('hidden');
+                addCoinsInputContainer.style.display = 'flex';
+                addCoinsInput.focus();
+            });
+
+            addCoinsInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const amount = parseInt(addCoinsInput.value.trim());
+                    if (!isNaN(amount) && amount > 0) {
+                        yourOfferedCoins = amount;
+                        addCoinsButton.textContent = `${amount} Wen`;
+                        renderOffers();
+                    } else {
+                        yourOfferedCoins = 0;
+                        addCoinsButton.textContent = 'Add Coins';
+                    }
+                    addCoinsInputContainer.style.display = 'none';
+                    addCoinsButton.classList.remove('hidden');
+                    addCoinsInput.value = '';
+                }
+            });
+            
+            addStealCoinsButton.addEventListener('click', () => {
+                addStealCoinsButton.classList.add('hidden');
+                addStealCoinsInputContainer.style.display = 'flex';
+                addStealCoinsInput.focus();
+            });
+            
+            addStealCoinsInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const amount = parseInt(addStealCoinsInput.value.trim());
+                    if (!isNaN(amount) && amount > 0) {
+                        yourStealOfferedCoins = amount;
+                        addStealCoinsButton.textContent = `${amount} Wen`;
+                        renderStealOffers();
+                    } else {
+                        yourStealOfferedCoins = 0;
+                        addStealCoinsButton.textContent = 'Add Coins';
+                    }
+                    addStealCoinsInputContainer.style.display = 'none';
+                    addStealCoinsButton.classList.remove('hidden');
+                    addStealCoinsInput.value = '';
+                }
+            });
+            
+            acceptButton.addEventListener('click', () => {
+                if (userRequestedBlook && !yourOfferedBlooks.some(b => b.name === userRequestedBlook)) {
+                    appendMessage('bot', `Please add the ${userRequestedBlook} to your offer first.`);
+                    return;
+                }
+
+                if (acceptButton.textContent === 'Unconfirm') {
+                    acceptButton.textContent = 'Accept';
+                    yourOfferContent.classList.remove('confirmed-offer', 'bg-green-500', 'bg-opacity-20');
+                    yourOfferOverlay.classList.add('hidden');
+                    addOfferButton.classList.remove('hidden');
+                    addOfferInputContainer.style.display = 'none';
+                    addCoinsButton.classList.remove('hidden');
+                    addCoinsInputContainer.style.display = 'none';
+                } else {
+                    confirmYourOffer();
+                }
+            });
+
+            declineButton.addEventListener('click', () => {
+                tradeModalUI.classList.add('hidden');
+                resetTradeUI();
+                showAlert('You Declined the trade!');
+            });
+            
+            chatButton.addEventListener('click', () => {
+                chatUI.classList.remove('hidden');
+            });
+            
+            closeChatButton.addEventListener('click', () => {
+                chatUI.classList.add('hidden');
+            });
+            
+            sendChatButton.addEventListener('click', () => {
+                if (chatInput.value.trim() !== '') {
+                    const userMessage = chatInput.value;
+                    appendMessage('user', userMessage);
+                    chatInput.value = '';
+                    getBotResponse(userMessage);
+                }
+            });
+            
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && chatInput.value.trim() !== '') {
+                    const userMessage = chatInput.value;
+                    appendMessage('user', userMessage);
+                    chatInput.value = '';
+                    getBotResponse(userMessage);
+                }
+            });
+
+            addFriendsButton.addEventListener('click', () => {
+                addFriendsUI.classList.remove('hidden');
+            });
+            
+            closeFriendsUI.addEventListener('click', () => {
+                addFriendsUI.classList.add('hidden');
+                friendInput.value = '';
+                addButton.disabled = true;
+                addButton.style.opacity = '0.5';
+            });
+            
+            addFriendsUI.addEventListener('click', (event) => {
+                if (event.target === addFriendsUI) {
+                    addFriendsUI.classList.add('hidden');
+                    friendInput.value = '';
+                    addButton.disabled = true;
+                    addButton.style.opacity = '0.5';
+                }
+            });
+
+            friendInput.addEventListener('input', () => {
+                if (friendInput.value.trim() === '') {
+                    addButton.disabled = true;
+                    addButton.style.opacity = '0.5';
+                } else {
+                    addButton.disabled = false;
+                    addButton.style.opacity = '1';
+                }
+            });
+
+            const addFriendHandler = () => {
+                const friendName = friendInput.value.trim();
+                if (friendName === '') return;
+
+                // Add friend to local storage since we don't have Firebase
+                currentFriends.push({ id: Date.now(), name: friendName });
+                renderFriendsList(currentFriends);
+
+                validFriendMessage.textContent = 'Valid Friend!';
+                validFriendMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    validFriendMessage.classList.add('hidden');
+                    addFriendsUI.classList.add('hidden');
+                    friendInput.value = '';
+                    addButton.disabled = true;
+                    addButton.style.opacity = '0.5';
+                }, 1500);
+            };
+            
+            addButton.addEventListener('click', addFriendHandler);
+            friendInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !addButton.disabled) {
+                    addFriendHandler();
+                }
+            });
+
+            tradeSwitch.addEventListener('change', () => {
+                if (tradeSwitch.checked) {
+                    currentAction = 'trade';
+                    renderFriendsList(currentFriends);
+                }
+            });
+            
+            stealSwitch.addEventListener('change', () => {
+                if (stealSwitch.checked) {
+                    currentAction = 'steal';
+                    renderFriendsList(currentFriends);
+                }
+            });
+            
+            async function removeFriend(friendId) {
+                currentFriends = currentFriends.filter(friend => friend.id !== friendId);
+                renderFriendsList(currentFriends);
+            }
+            
+            function renderFriendsList(friends = []) {
+                dynamicFriendsContent.innerHTML = '';
+                
+                if (friends.length === 0) {
+                    dynamicFriendsContent.innerHTML = `<p style="color: #374151;">No friends here :(</p>`;
+                } else {
+                    const header = document.createElement('h2');
+                    header.style.cssText = 'font-size: 1.25rem; font-weight: bold; color: #1f2937;';
+                    header.textContent = 'My friends:';
+                    dynamicFriendsContent.appendChild(header);
+
+                    const friendList = document.createElement('ul');
+                    friendList.style.cssText = 'list-style: none; margin-top: 0.5rem;';
+                    friends.forEach(friend => {
+                        const listItem = document.createElement('li');
+                        listItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; color: #374151; margin: 0.5rem 0; padding: 0.5rem; background-color: #f3f4f6; border-radius: 0.375rem;';
+                        
+                        const friendName = document.createElement('span');
+                        friendName.textContent = friend.name;
+
+                        const buttonContainer = document.createElement('div');
+                        buttonContainer.style.cssText = 'display: flex; align-items: center; gap: 0.5rem;';
+
+                        const actionButton = document.createElement('button');
+                        actionButton.textContent = currentAction === 'trade' ? 'Trade' : 'Steal Blooks';
+                        actionButton.className = 'bg-yellow-400';
+                        actionButton.style.cssText = 'background-color: #fbbf24; color: white; font-weight: bold; padding: 0.25rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer;';
+                        actionButton.addEventListener('click', () => {
+                            if (currentAction === 'trade') {
+                                tradeModalUI.classList.remove('hidden');
+                            } else {
+                                stealTradeModalUI.classList.remove('hidden');
+                                yourStealOfferedBlooks.push({ name: 'Steal from ' + friend.name });
+                                renderStealOffers();
+                            }
+                        });
+                        
+                        const removeButton = document.createElement('button');
+                        removeButton.textContent = 'Remove';
+                        removeButton.style.cssText = 'color: #ef4444; font-weight: bold; background: none; border: none; cursor: pointer; margin-left: 1rem;';
+                        removeButton.addEventListener('click', () => {
+                            removeFriend(friend.id);
+                        });
+
+                        buttonContainer.appendChild(actionButton);
+                        buttonContainer.appendChild(removeButton);
+                        listItem.appendChild(friendName);
+                        listItem.appendChild(buttonContainer);
+                        friendList.appendChild(listItem);
+                    });
+                    dynamicFriendsContent.appendChild(friendList);
+                }
+            }
+
+            // Initialize with empty friends list
+            renderFriendsList(currentFriends);
+        }
+
+        // Initialize the app
+        setupUI();
+        
+        console.log('Trade Button app loaded! Click the Trade button on the right side of the screen.');
+        
+    }, 100);
+
+    // Return a function to remove the app
+    return function cleanup() {
+        if (appContainer && appContainer.parentNode) {
+            appContainer.parentNode.removeChild(appContainer);
+        }
+    };
+})();
+
+    // 
+    //Blooket Client UI - Enhanced Interactive Interface
 (function() {
     'use strict';
 
