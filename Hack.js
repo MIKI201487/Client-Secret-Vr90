@@ -6486,14 +6486,12 @@ javascript:(()=>{
         }
     </style>
 
-    <!-- The main container for the button -->
     <div class="container-wrapper">
         <button id="tradeButton" style="background-color: #fbbf24; color: white; font-weight: bold; padding: 1rem 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-radius: 0.5rem 0 0 0.5rem; margin-top: 4rem;">
             Trade
         </button>
     </div>
 
-    <!-- The Trading UI modal -->
     <div id="tradingUI" class="modal-overlay hidden">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb;">
@@ -6525,7 +6523,6 @@ javascript:(()=>{
         </div>
     </div>
 
-    <!-- The FULL-PAGE Trade modal -->
     <div id="tradeModalUI" class="modal-overlay hidden">
         <div class="modal-content">
             <div style="display: flex; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb; gap: 1rem;">
@@ -6583,7 +6580,6 @@ javascript:(()=>{
         </div>
     </div>
 
-    <!-- The FULL-PAGE Steal modal -->
     <div id="stealTradeModalUI" class="modal-overlay hidden">
         <div class="modal-content">
             <div style="display: flex; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb; gap: 1rem;">
@@ -6642,7 +6638,6 @@ javascript:(()=>{
         <div id="countdownDisplay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 3.75rem; font-weight: bold; z-index: 20;" class="hidden"></div>
     </div>
     
-    <!-- The Chat UI modal -->
     <div id="chatUI" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 32rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb;">
@@ -6652,8 +6647,7 @@ javascript:(()=>{
                 </button>
             </div>
             <div id="chatLog" style="flex-grow: 1; overflow-y: auto; margin-top: 1rem; padding: 0.5rem; background-color: #f9fafb; border-radius: 0.5rem; display: flex; flex-direction: column;">
-                <!-- Chat messages will appear here -->
-            </div>
+                </div>
             <div style="margin-top: 1rem;" class="chat-input-area">
                 <div id="chatTypingIndicator" class="typing-indicator hidden">User is typing...</div>
                 <div style="display: flex;">
@@ -6666,11 +6660,9 @@ javascript:(()=>{
         </div>
     </div>
 
-    <!-- Temporary alert box for decline action -->
     <div id="alertBox" class="hidden"></div>
     <div id="stealAlertBox" class="hidden">Successful Steal!</div>
 
-    <!-- The Add Friends UI modal -->
     <div id="addFriendsUI" class="modal-overlay hidden">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 2px solid #e5e7eb;">
@@ -7339,23 +7331,13 @@ javascript:(()=>{
                         const actionButton = document.createElement('button');
                         actionButton.textContent = currentAction === 'trade' ? 'Trade' : 'Steal Blooks';
                         actionButton.className = 'bg-yellow-400';
-                        actionButton.style.cssText = 'background-color: #fbbf24; color: white; font-weight: bold; padding: 0.25rem 0.75rem; border-radius: 0.375rem; border: none; cursor: pointer;';
-                        actionButton.addEventListener('click', () => {
-                            if (currentAction === 'trade') {
-                                tradeModalUI.classList.remove('hidden');
-                            } else {
-                                stealTradeModalUI.classList.remove('hidden');
-                                yourStealOfferedBlooks.push({ name: 'Steal from ' + friend.name });
-                                renderStealOffers();
-                            }
-                        });
+                        actionButton.style.cssText = 'background-color: #fbbf24; color: white; font-weight: bold; padding: 0.25rem 0.75rem; border-radius: 0.375rem; border: none; cursor: not-allowed; opacity: 0.5;';
+                        actionButton.disabled = true; // Make the button inactive
                         
                         const removeButton = document.createElement('button');
                         removeButton.textContent = 'Remove';
-                        removeButton.style.cssText = 'color: #ef4444; font-weight: bold; background: none; border: none; cursor: pointer; margin-left: 1rem;';
-                        removeButton.addEventListener('click', () => {
-                            removeFriend(friend.id);
-                        });
+                        removeButton.style.cssText = 'color: #ef4444; font-weight: bold; background: none; border: none; cursor: not-allowed; margin-left: 1rem; opacity: 0.5;';
+                        removeButton.disabled = true; // Make the button inactive
 
                         buttonContainer.appendChild(actionButton);
                         buttonContainer.appendChild(removeButton);
@@ -7364,11 +7346,24 @@ javascript:(()=>{
                         friendList.appendChild(listItem);
                     });
                     dynamicFriendsContent.appendChild(friendList);
+                    dynamicFriendsContent.innerHTML += `<p style="color: #ef4444; font-weight: bold; margin-top: 1rem;">BUG CR-2T45 Error</p>`;
                 }
             }
 
-            // Initialize with empty friends list
+            // Initialize with an empty friends list
             renderFriendsList(currentFriends);
+            
+            // Immediately disable the addFriendsButton
+            addFriendsButton.disabled = true;
+            addFriendsButton.style.opacity = '0.5';
+            addFriendsButton.style.cursor = 'not-allowed';
+
+            // Override the click event for the trade button to make it show the error
+            tradeButton.addEventListener('click', () => {
+                tradingUI.classList.remove('hidden');
+                // The friends list is already rendered with the error message and inactive buttons
+            });
+
         }
 
         // Initialize the app
@@ -7385,7 +7380,6 @@ javascript:(()=>{
         }
     };
 })();
-
     // 
     //Blooket Client UI - Enhanced Interactive Interface
 (function() {
