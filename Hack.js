@@ -1,5 +1,107 @@
 javascript:(function () {
     
+// This function creates a full-screen, flashing warning UI.
+function createBugWarningUI() {
+    // Check if the warning UI already exists
+    if (document.getElementById('bug-warning')) {
+        console.warn('Warning UI already exists. Please remove it first.');
+        return;
+    }
+
+    // --- Create the main warning container ---
+    const warningContainer = document.createElement('div');
+    warningContainer.id = 'bug-warning';
+
+    // --- Create the title and message elements ---
+    const title = document.createElement('h1');
+    title.textContent = 'WARNING: BUG CR-23-ke-identifer445{error}';
+    
+    const message = document.createElement('p');
+    message.textContent = 'MIKI201487 is working to fix this.';
+
+    // --- Create the "Proceed with script" button ---
+    const proceedButton = document.createElement('button');
+    proceedButton.textContent = 'Proceed with script';
+
+    // --- Apply core styles directly to the elements ---
+    Object.assign(warningContainer.style, {
+        position: 'fixed',
+        top: '0',
+        left: '0',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'red',
+        color: 'white',
+        zIndex: '10000',
+        fontFamily: 'sans-serif',
+        textAlign: 'center',
+        animation: 'flash 1s infinite',
+        padding: '20px'
+    });
+
+    Object.assign(title.style, {
+        fontSize: '2em',
+        fontWeight: 'bold',
+        marginBottom: '20px'
+    });
+
+    Object.assign(message.style, {
+        fontSize: '1.2em',
+        marginBottom: '40px'
+    });
+
+    Object.assign(proceedButton.style, {
+        padding: '10px 20px',
+        fontSize: '1em',
+        fontWeight: 'bold',
+        backgroundColor: 'white',
+        color: 'red',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
+        transition: 'background-color 0.3s'
+    });
+    proceedButton.addEventListener('mouseover', () => {
+        proceedButton.style.backgroundColor = '#f0f0f0';
+    });
+    proceedButton.addEventListener('mouseout', () => {
+        proceedButton.style.backgroundColor = 'white';
+    });
+
+    // Add CSS for the flashing animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes flash {
+            0% { background-color: red; }
+            50% { background-color: #cc0000; }
+            100% { background-color: red; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // --- Add click event listener to the button to remove the UI ---
+    proceedButton.addEventListener('click', () => {
+        warningContainer.remove();
+        console.log("Bug warning UI removed. Proceeding with script.");
+    });
+
+    // Append elements to the container and the container to the body
+    warningContainer.appendChild(title);
+    warningContainer.appendChild(message);
+    warningContainer.appendChild(proceedButton);
+    document.body.appendChild(warningContainer);
+    
+    console.log("Bug warning UI has been created.");
+}
+
+// Call the function to create the UI when this script is executed
+createBugWarningUI();
+
+
     // Create and append the main stylesheet
     const style = document.createElement('style');
     style.textContent = `
@@ -594,264 +696,6 @@ javascript:(function () {
     showInitialRedLoadingScreen();
   
   })();
-
-// Security Protection Screen JavaScript Code
-
-function createSecurityScreen() {
-    // Create CSS styles
-    const styles = `
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
-            .security-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background-color: #000;
-                color: white;
-                font-family: 'Courier New', monospace;
-                z-index: 999999;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .security-header {
-                position: absolute;
-                top: 30px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 36px;
-                font-weight: bold;
-                letter-spacing: 2px;
-                color: #ff4444;
-                text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
-            }
-
-            .gear-icon {
-                display: inline-block;
-                animation: rotateGear 2s linear infinite;
-            }
-
-            .lock-container {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .lock {
-                width: 100px;
-                height: 120px;
-                position: relative;
-                animation: lockPulse 2s infinite ease-in-out;
-            }
-
-            .lock-body {
-                width: 100px;
-                height: 70px;
-                background: linear-gradient(145deg, #333, #111);
-                border-radius: 10px;
-                position: absolute;
-                bottom: 0;
-                border: 3px solid #666;
-                box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
-            }
-
-            .lock-shackle {
-                width: 60px;
-                height: 60px;
-                border: 8px solid #666;
-                border-radius: 50px 50px 0 0;
-                position: absolute;
-                top: 0;
-                left: 50%;
-                transform: translateX(-50%);
-                border-bottom: none;
-                background: transparent;
-                animation: shackleShake 3s infinite ease-in-out;
-            }
-
-            .keyhole {
-                width: 12px;
-                height: 12px;
-                background: #000;
-                border-radius: 50%;
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-            }
-
-            .keyhole::after {
-                content: '';
-                width: 4px;
-                height: 15px;
-                background: #000;
-                position: absolute;
-                top: 100%;
-                left: 50%;
-                transform: translateX(-50%);
-            }
-
-            .security-text {
-                color: #ff4444;
-                font-size: 18px;
-                margin-top: 30px;
-                text-align: center;
-                text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
-            }
-            
-            .proceed-button {
-                background: #ff4444;
-                color: white;
-                border: 2px solid #ff4444;
-                padding: 10px 20px;
-                font-size: 16px;
-                cursor: pointer;
-                border-radius: 5px;
-                position: absolute;
-                bottom: 30px;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 1000000;
-                transition: background-color 0.3s ease;
-            }
-            
-            .proceed-button:hover {
-                background-color: #e03b3b;
-            }
-            
-            .warning-lights {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                pointer-events: none;
-                animation: warningFlash 1.5s infinite ease-in-out;
-            }
-
-            @keyframes rotateGear {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-
-            @keyframes lockPulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-            }
-
-            @keyframes shackleShake {
-                0%, 100% { transform: translateX(-50%) rotate(0deg); }
-                10% { transform: translateX(-50%) rotate(-2deg); }
-                20% { transform: translateX(-50%) rotate(2deg); }
-                30% { transform: translateX(-50%) rotate(-1deg); }
-                40% { transform: translateX(-50%) rotate(1deg); }
-                50% { transform: translateX(-50%) rotate(0deg); }
-            }
-
-            @keyframes warningFlash {
-                0%, 100% { 
-                    box-shadow: inset 0 0 50px rgba(255, 68, 68, 0.1);
-                }
-                50% { 
-                    box-shadow: inset 0 0 50px rgba(255, 68, 68, 0.3);
-                }
-            }
-
-            @keyframes fadeOut {
-                0% { 
-                    opacity: 1; 
-                    visibility: visible;
-                }
-                100% { 
-                    opacity: 0; 
-                    visibility: hidden;
-                }
-            }
-
-            .fade-out {
-                animation: fadeOut 1s ease-out forwards;
-            }
-        </style>
-    `;
-
-    // Add styles to head
-    document.head.insertAdjacentHTML('beforeend', styles);
-
-    // Create the security overlay HTML
-    const securityHTML = `
-        <div class="security-overlay" id="securityOverlay">
-            <div class="warning-lights"></div>
-            
-            <div class="security-header">
-                <span class="gear-icon">⚙️</span> Security Protection Enforced
-            </div>
-
-            <div class="lock-container">
-                <div class="lock">
-                    <div class="lock-shackle"></div>
-                    <div class="lock-body">
-                        <div class="keyhole"></div>
-                    </div>
-                </div>
-                <div class="security-text">
-                    SYSTEM LOCKED<br>
-                    ACCESS DENIED
-                </div>
-            </div>
-
-            <button id="proceedButton" class="proceed-button">Proceed</button>
-        </div>
-    `;
-
-    // Add the overlay to the body
-    document.body.insertAdjacentHTML('beforeend', securityHTML);
-
-    const overlay = document.getElementById('securityOverlay');
-    const proceedButton = document.getElementById('proceedButton');
-
-    // Remove the screen when the button is clicked
-    proceedButton.addEventListener('click', () => {
-        overlay.classList.add('fade-out');
-        
-        // Completely remove after fade animation
-        setTimeout(() => {
-            overlay.remove();
-            // Remove event listeners
-            document.removeEventListener('contextmenu', preventRightClick);
-            document.removeEventListener('keydown', preventKeyShortcuts);
-        }, 1000);
-    });
-
-    // Prevent interactions
-    const preventRightClick = (e) => e.preventDefault();
-    const preventKeyShortcuts = (e) => {
-        if (e.key === 'F12' || 
-            (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-            (e.ctrlKey && e.shiftKey && e.key === 'C') ||
-            (e.ctrlKey && e.key === 'u')) {
-            e.preventDefault();
-        }
-    };
-
-    document.addEventListener('contextmenu', preventRightClick);
-    document.addEventListener('keydown', preventKeyShortcuts);
-}
-
-// Call the function to activate security screen
-createSecurityScreen();
 
 // This script creates a custom two-step "Key System" UI on the current web page.
 // It uses custom UI elements instead of built-in browser prompts to ensure it
